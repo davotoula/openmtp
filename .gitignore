@@ -71,3 +71,5 @@ tmp/*
 *.js.map
 *.js.LICENSE.txt
 *.prod.js.LICENSE.txt
+
+docs/plans/
