@@ -21,6 +21,7 @@ coverage
 
 # Compiled binary addons (http://nodejs.org/api/addons.html)
 build/Release
+build/mac/bin/
 .eslintcache
 
 # Dependency directory

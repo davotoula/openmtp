@@ -37,18 +37,26 @@ export const log = {
     }
 
     if (!isEmpty(title)) {
-      clp({
-        color: 'white',
-        background: 'green',
-        message: title,
-      });
+      try {
+        clp({
+          color: 'white',
+          background: 'green',
+          message: title,
+        });
+      } catch (_) {
+        console.info(title);
+      }
     }
 
     if (!isEmpty(e)) {
-      clp({
-        color: 'blue',
-        message: e,
-      });
+      try {
+        clp({
+          color: 'blue',
+          message: e,
+        });
+      } catch (_) {
+        console.info(e);
+      }
     }
   },
 
@@ -68,17 +76,25 @@ export const log = {
     }
 
     if (!isEmpty(title)) {
-      clp({
-        color: 'white',
-        background: 'red',
-        message: title,
-      });
+      try {
+        clp({
+          color: 'white',
+          background: 'red',
+          message: title,
+        });
+      } catch (_) {
+        console.error(title);
+      }
     }
 
-    clp({
-      color: 'red',
-      message: e,
-    });
+    try {
+      clp({
+        color: 'red',
+        message: e,
+      });
+    } catch (_) {
+      console.error(e);
+    }
   },
 
   /**
