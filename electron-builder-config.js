@@ -43,7 +43,7 @@ module.exports = () => {
   };
 
   return {
-    productName: 'OpenMTP',
+    productName: 'OpenMTP-resume',
     appId: 'io.ganeshrvel.openmtp',
     forceCodeSigning: true,
     // eslint-disable-next-line no-template-curly-in-string

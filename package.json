@@ -1,6 +1,6 @@
 {
-  "name": "openmtp",
-  "productName": "OpenMTP",
+  "name": "openmtp-resume",
+  "productName": "OpenMTP-resume",
   "version": "3.2.25",
   "description": "OpenMTP | Android File Transfer for macOS",
   "scripts": {
