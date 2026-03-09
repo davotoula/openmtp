@@ -176,12 +176,66 @@ const socialMediaShareBtnsList = [
   },
 ];
 
+const formatElapsedTime = (ms) => {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts = [];
+
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+  }
+
+  if (minutes > 0) {
+    parts.push(`${minutes}m`);
+  }
+
+  parts.push(`${seconds}s`);
+
+  return parts.join(' ');
+};
+
+const formatAvgSpeed = ({ avgSpeed, mtpMode }) => {
+  if (!avgSpeed) {
+    return '--';
+  }
+
+  return mtpMode === MTP_MODE.legacy
+    ? `${niceBytes(avgSpeed * 1000 * 1000)}/s`
+    : `${avgSpeed.toFixed(2)} MB/s`;
+};
+
+const buildCompletedStats = ({
+  filesTransferred,
+  totalFiles,
+  filesSkipped = 0,
+  totalFileSizeSent,
+  elapsedTime,
+  avgSpeed,
+  mtpMode,
+  failedFiles = [],
+}) => ({
+  filesTransferred,
+  totalFiles,
+  filesSkipped,
+  totalSize: totalFileSizeSent ? niceBytes(totalFileSizeSent) : '--',
+  elapsedTime: elapsedTime || '--',
+  averageSpeed: formatAvgSpeed({ avgSpeed, mtpMode }),
+  failedFiles,
+});
+
 class FileExplorer extends Component {
   constructor(props) {
     super(props);
 
     this.mainWindowRendererProcess = getMainWindowRendererProcess();
     this.filesDragGhostImg = this._createDragIcon();
+
+    this._lastSessionStats = null;
+    this._totalFilesSent = 0;
+    this._transferStartTime = null;
 
     this.initialState = {
       conflictDialog: {
@@ -1775,6 +1829,7 @@ class FileExplorer extends Component {
     // Reset session stats accumulators
     this._lastSessionStats = null;
     this._totalFilesSent = 0;
+    this._transferStartTime = Date.now();
 
     // Show the transfer progress dialog
     actionSetFileTransferProgress({
@@ -1839,26 +1894,21 @@ class FileExplorer extends Component {
         getCurrentWindow().setProgressBar(-1);
 
         const filesTransferred = this._totalFilesSent || 0;
-        const totalFiles = filesTransferred + progressState.skipped;
 
         actionSetFileTransferProgress({
           titleText,
           toggle: true,
-          completedStats: {
+          completedStats: buildCompletedStats({
             filesTransferred,
             totalFiles,
             filesSkipped: progressState.skipped,
-            totalSize: sessionStats?.totalFileSizeSent
-              ? niceBytes(sessionStats.totalFileSizeSent)
-              : '--',
-            elapsedTime: sessionStats?.elapsedTime || '--',
-            averageSpeed: sessionStats?.avgSpeed
-              ? sessionStats.mtpMode === MTP_MODE.legacy
-                ? `${niceBytes(sessionStats.avgSpeed * 1000 * 1000)}/s`
-                : `${sessionStats.avgSpeed.toFixed(2)} MB/s`
-              : '--',
-            failedFiles: [],
-          },
+            totalFileSizeSent: sessionStats?.totalFileSizeSent,
+            elapsedTime: formatElapsedTime(
+              Date.now() - this._transferStartTime
+            ),
+            avgSpeed: sessionStats?.avgSpeed,
+            mtpMode: sessionStats?.mtpMode,
+          }),
         });
 
         this._lastSessionStats = null;
@@ -2243,9 +2293,6 @@ class FileExplorer extends Component {
   };
 
   _handleTransferDialogDismiss = () => {
-    const { actionClearFileTransfer } = this.props;
-
-    actionClearFileTransfer();
     this._refreshDirectoryListing();
   };
 
@@ -3137,17 +3184,12 @@ const mapDispatchToProps = (dispatch, _) =>
                         setFileTransferProgress({
                           titleText: 'Transfer Failed',
                           toggle: true,
-                          completedStats: {
+                          completedStats: buildCompletedStats({
                             filesTransferred: 0,
                             totalFiles: sessionTotalFiles,
-                            filesSkipped: 0,
-                            totalSize: sessionTotalFileSizeSent
-                              ? niceBytes(sessionTotalFileSizeSent)
-                              : '--',
-                            elapsedTime: sessionElapsedTime || '--',
-                            averageSpeed: '--',
-                            failedFiles: [],
-                          },
+                            totalFileSizeSent: sessionTotalFileSizeSent,
+                            elapsedTime: sessionElapsedTime,
+                          }),
                         })
                       );
                     }
@@ -3205,20 +3247,14 @@ const mapDispatchToProps = (dispatch, _) =>
                 setFileTransferProgress({
                   titleText: 'Transfer Complete',
                   toggle: true,
-                  completedStats: {
+                  completedStats: buildCompletedStats({
                     filesTransferred: sessionTotalFiles,
                     totalFiles: sessionTotalFiles,
-                    filesSkipped: 0,
-                    totalSize: sessionTotalFileSizeSent
-                      ? niceBytes(sessionTotalFileSizeSent)
-                      : '--',
-                    elapsedTime: sessionElapsedTime || '--',
-                    averageSpeed:
-                      mtpMode === MTP_MODE.legacy
-                        ? `${niceBytes(avgSpeed * 1000 * 1000)}/s`
-                        : `${avgSpeed.toFixed(2)} MB/s`,
-                    failedFiles: [],
-                  },
+                    totalFileSizeSent: sessionTotalFileSizeSent,
+                    elapsedTime: sessionElapsedTime,
+                    avgSpeed,
+                    mtpMode,
+                  }),
                 })
               );
             };
