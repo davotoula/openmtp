@@ -33,6 +33,17 @@ export class Kalam {
         'void UploadFiles(char* uploadFilesInputJson, on_cb_result_t* onPreprocessPtr, on_cb_result_t* onProgressPtr, on_cb_result_t* onDonePtr)',
       Dispose: 'void Dispose(on_cb_result_t* onDonePtr)',
     });
+
+    // Cache resolved native function symbols (avoid re-resolving per call)
+    this._cachedFns = {};
+  }
+
+  _getFunc(name) {
+    if (!this._cachedFns[name]) {
+      this._cachedFns[name] = this.lib.func(this.fnDictionary[name]);
+    }
+
+    return this._cachedFns[name];
   }
 
   _getNapiError(error) {
@@ -401,6 +412,10 @@ export class Kalam {
           }
         }, koffi.pointer(onFfiPreprocessPtr));
 
+        // Throttle progress to max 1 update per 100ms
+        let lastProgressTime = 0;
+        let pendingProgressData = null;
+
         const onFfiProgressPtr = this.callbackDictionary.onCbResult;
         const rawOnFfiProgressPtr = koffi.register((result) => {
           const json = JSON.parse(result);
@@ -413,13 +428,27 @@ export class Kalam {
           }
 
           if (onProgress && data) {
-            onProgress({ ...data });
+            const now = Date.now();
+
+            if (now - lastProgressTime >= 100) {
+              lastProgressTime = now;
+              pendingProgressData = null;
+              onProgress({ ...data });
+            } else {
+              pendingProgressData = data;
+            }
           }
         }, koffi.pointer(onFfiProgressPtr));
 
         const onDonePtr = this.callbackDictionary.onCbResult;
         const rawOnDonePtr = koffi.register((result) => {
           const json = JSON.parse(result);
+
+          // Flush any throttled progress update
+          if (pendingProgressData && onProgress) {
+            onProgress({ ...pendingProgressData });
+            pendingProgressData = null;
+          }
 
           if (onCompleted) {
             onCompleted();
@@ -432,11 +461,11 @@ export class Kalam {
 
         switch (direction) {
           case FILE_TRANSFER_DIRECTION.download:
-            TransferFiles = this.lib.func(this.fnDictionary.DownloadFiles);
+            TransferFiles = this._getFunc('DownloadFiles');
 
             break;
           case FILE_TRANSFER_DIRECTION.upload:
-            TransferFiles = this.lib.func(this.fnDictionary.UploadFiles);
+            TransferFiles = this._getFunc('UploadFiles');
 
             break;
 
