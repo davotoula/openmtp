@@ -48,7 +48,9 @@ class ProgressBar extends PureComponent {
               </span>
             </div>
             <div className={styles.statsRow}>
-              <span className={styles.statsLabel}>Average speed</span>
+              <span className={styles.statsLabel}>
+                Average speed (native layer)
+              </span>
               <span className={styles.statsValue}>
                 {completedStats.averageSpeed}
               </span>
