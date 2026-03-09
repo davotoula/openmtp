@@ -46,7 +46,7 @@ export const styles = (theme) => ({
     fontSize: 14,
   },
   statsLabel: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: theme.palette.text.secondary,
   },
   statsValue: {
     fontWeight: 500,
@@ -56,7 +56,7 @@ export const styles = (theme) => ({
   },
   failedFilesToggle: {
     textTransform: 'none',
-    color: '#f44336',
+    color: theme.palette.error.main,
     padding: '4px 8px',
     fontSize: 13,
   },
