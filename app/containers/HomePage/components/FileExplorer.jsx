@@ -231,7 +231,9 @@ class FileExplorer extends Component {
     this.mainWindowRendererProcess = getMainWindowRendererProcess();
     this.filesDragGhostImg = this._createDragIcon();
 
-    this._lastSessionStats = null;
+    this._totalFileSizeSent = 0;
+    this._transferSpeeds = [];
+    this._mtpMode = null;
     this._totalFilesSent = 0;
     this._transferStartTime = null;
 
@@ -1825,7 +1827,9 @@ class FileExplorer extends Component {
     const progressState = { transferred: 0, skipped: 0, total: totalFiles };
 
     // Reset session stats accumulators
-    this._lastSessionStats = null;
+    this._totalFileSizeSent = 0;
+    this._transferSpeeds = [];
+    this._mtpMode = null;
     this._totalFilesSent = 0;
     this._transferStartTime = Date.now();
 
@@ -1867,11 +1871,11 @@ class FileExplorer extends Component {
       );
     } finally {
       const { actionSetFileTransferProgress } = this.props;
-      const sessionStats = this._lastSessionStats;
       const hadActivity =
         progressState.transferred > 0 || progressState.skipped > 0;
+      const hasStats = this._totalFilesSent > 0;
 
-      if (sessionStats || hadActivity) {
+      if (hasStats || hadActivity) {
         // Determine title based on outcome
         let titleText = 'Transfer Complete';
 
@@ -1898,18 +1902,19 @@ class FileExplorer extends Component {
           toggle: true,
           completedStats: buildCompletedStats({
             filesTransferred,
-            totalFiles,
+            totalFiles: progressState.total,
             filesSkipped: progressState.skipped,
-            totalFileSizeSent: sessionStats?.totalFileSizeSent,
+            totalFileSizeSent: this._totalFileSizeSent || null,
             elapsedTime: formatElapsedTime(
               Date.now() - this._transferStartTime
             ),
-            avgSpeed: sessionStats?.avgSpeed,
-            mtpMode: sessionStats?.mtpMode,
+            avgSpeed:
+              this._transferSpeeds.length > 0
+                ? arrayAverage(this._transferSpeeds)
+                : null,
+            mtpMode: this._mtpMode,
           }),
         });
-
-        this._lastSessionStats = null;
       } else {
         this._refreshDirectoryListing();
       }
@@ -1926,7 +1931,10 @@ class FileExplorer extends Component {
     const destFilesMap = await this._getDestinationFilesMap(destinationFolder);
 
     // === Phase 1: Classify ===
+    // Directories are not counted in progress stats — only files are.
+    // Directories go to noConflictDirs (no conflict) or directoryMerge (conflict).
     const noConflict = [];
+    const noConflictDirs = [];
     const autoReplace = [];
     const needsDialog = [];
     const directoryMerge = [];
@@ -1939,23 +1947,28 @@ class FileExplorer extends Component {
         ? { ...destFilesMap[fileName] }
         : { exists: false, size: null, dateAdded: null, isFolder: null };
 
-      if (!destMeta.exists) {
-        noConflict.push(entry);
-        continue; // eslint-disable-line no-continue
-      }
-
-      // Conflict detected — determine type
       const defaultMeta = { size: null, dateAdded: null, isFolder: false };
       const sourceMeta =
         entrySourceMeta || sourceMetadataMap[sourcePath] || defaultMeta;
       const isDirectory = destMeta.isFolder || sourceMeta.isFolder;
 
+      if (!destMeta.exists) {
+        if (isDirectory) {
+          noConflictDirs.push(entry);
+        } else {
+          noConflict.push(entry);
+        }
+
+        continue; // eslint-disable-line no-continue
+      }
+
+      // Conflict detected — determine type
       if (isDirectory) {
         const memoryKey = 'directory';
 
+        // Directories don't count toward progress — just route them
         if (conflictMemory[memoryKey] === CONFLICT_ACTION.skip) {
-          progressState.skipped += 1; // eslint-disable-line no-param-reassign
-          this._updateTransferProgress(fileName, progressState);
+          progressState.total -= 1; // eslint-disable-line no-param-reassign
           continue; // eslint-disable-line no-continue
         }
 
@@ -2019,8 +2032,13 @@ class FileExplorer extends Component {
       });
 
       if (action === CONFLICT_ACTION.skip) {
-        progressState.skipped += 1; // eslint-disable-line no-param-reassign
-        this._updateTransferProgress(fileName, progressState);
+        if (isDirectory) {
+          // Directories don't count toward progress
+          progressState.total -= 1; // eslint-disable-line no-param-reassign
+        } else {
+          progressState.skipped += 1; // eslint-disable-line no-param-reassign
+          this._updateTransferProgress(fileName, progressState);
+        }
       } else if (isDirectory) {
         directoryMerge.push({ ...item, sourceMeta, destMeta });
       } else {
@@ -2038,8 +2056,13 @@ class FileExplorer extends Component {
 
           if (r.memoryKey === memoryKey && conflictMemory[memoryKey] !== null) {
             if (conflictMemory[memoryKey] === CONFLICT_ACTION.skip) {
-              progressState.skipped += 1; // eslint-disable-line no-param-reassign
-              this._updateTransferProgress(r.fileName, progressState);
+              if (r.isDirectory) {
+                // Directories don't count toward progress
+                progressState.total -= 1; // eslint-disable-line no-param-reassign
+              } else {
+                progressState.skipped += 1; // eslint-disable-line no-param-reassign
+                this._updateTransferProgress(r.fileName, progressState);
+              }
             } else if (r.isDirectory) {
               directoryMerge.push(r);
             } else {
@@ -2053,24 +2076,33 @@ class FileExplorer extends Component {
     }
 
     // === Phase 3: Execute ===
-    // Batch transfer non-conflicting files
-    if (noConflict.length > 0) {
-      const sources = noConflict.map((e) => e.sourcePath);
+    // Batch transfer non-conflicting entries (files and directories together)
+    const noConflictAll = [...noConflictDirs, ...noConflict];
+
+    if (noConflictAll.length > 0) {
+      const sources = noConflictAll.map((e) => e.sourcePath);
       const result = await this._transferBatch(sources, destinationFolder);
+      const nativeFilesSent = result.sessionStats?.totalFilesSent || 0;
 
       if (result.sessionStats) {
-        this._lastSessionStats = result.sessionStats;
-        this._totalFilesSent += result.sessionStats.totalFilesSent || 0;
+        this._accumulateSessionStats(result.sessionStats);
+        this._totalFilesSent += nativeFilesSent;
       }
 
+      // Replace directory entries in total with the actual file count from
+      // the native layer, which includes files inside those directories.
+      // total currently counts: noConflict.length (files) + noConflictDirs.length (dirs)
+      // We want it to reflect the actual files the native layer saw.
+      progressState.total += nativeFilesSent - noConflictAll.length; // eslint-disable-line no-param-reassign
+
       if (result.success) {
-        progressState.transferred += noConflict.length; // eslint-disable-line no-param-reassign
+        progressState.transferred += nativeFilesSent; // eslint-disable-line no-param-reassign
       } else {
         progressState.skipped += noConflict.length; // eslint-disable-line no-param-reassign
       }
 
       this._updateTransferProgress(
-        noConflict[noConflict.length - 1].fileName,
+        noConflictAll[noConflictAll.length - 1].fileName,
         progressState
       );
     }
@@ -2081,7 +2113,7 @@ class FileExplorer extends Component {
       const result = await this._transferBatch(sources, destinationFolder);
 
       if (result.sessionStats) {
-        this._lastSessionStats = result.sessionStats;
+        this._accumulateSessionStats(result.sessionStats);
         this._totalFilesSent += result.sessionStats.totalFilesSent || 0;
       }
 
@@ -2105,6 +2137,9 @@ class FileExplorer extends Component {
       const sourceContents = await this._listSourceDirectoryContents(
         sourcePath
       );
+
+      // The directory entry itself doesn't transfer as a file — replace it with its contents
+      progressState.total -= 1; // eslint-disable-line no-param-reassign
 
       if (sourceContents && sourceContents.length > 0) {
         progressState.total += sourceContents.length; // eslint-disable-line no-param-reassign
@@ -2248,15 +2283,23 @@ class FileExplorer extends Component {
             queue: sourcePaths,
           },
         },
-        {
-          filePath: destinationFolder,
-          ignoreHidden: false,
-        },
         deviceType,
         ({ success, sessionStats }) =>
           resolve({ success, filesSent: sourcePaths.length, sessionStats })
       );
     });
+  };
+
+  _accumulateSessionStats = (stats) => {
+    this._totalFileSizeSent += stats.totalFileSizeSent || 0;
+
+    if (stats.avgSpeed) {
+      this._transferSpeeds.push(stats.avgSpeed);
+    }
+
+    if (stats.mtpMode) {
+      this._mtpMode = stats.mtpMode;
+    }
   };
 
   _updateTransferProgress = (fileName, progressState) => {
@@ -3003,12 +3046,7 @@ const mapDispatchToProps = (dispatch, _) =>
         },
 
       actionCreatePaste:
-        (
-          { ...pasteArgs },
-          { ..._listDirectoryArgs },
-          deviceType,
-          onSingleFileComplete
-        ) =>
+        ({ ...pasteArgs }, deviceType, onSingleFileComplete) =>
         (_, getState) => {
           const transferStartTime = Date.now();
           let sessionElapsedTime = 0;
