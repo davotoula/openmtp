@@ -215,7 +215,6 @@ const buildCompletedStats = ({
   elapsedTime,
   avgSpeed,
   mtpMode,
-  failedFiles = [],
 }) => ({
   filesTransferred,
   totalFiles,
@@ -223,7 +222,6 @@ const buildCompletedStats = ({
   totalSize: totalFileSizeSent ? niceBytes(totalFileSizeSent) : '--',
   elapsedTime: elapsedTime || '--',
   averageSpeed: formatAvgSpeed({ avgSpeed, mtpMode }),
-  failedFiles,
 });
 
 class FileExplorer extends Component {
@@ -3012,6 +3010,7 @@ const mapDispatchToProps = (dispatch, _) =>
           onSingleFileComplete
         ) =>
         (_, getState) => {
+          const transferStartTime = Date.now();
           let sessionElapsedTime = 0;
           const sessionTransferSpeeds = [];
           let sessionTotalFiles = 0;
@@ -3188,7 +3187,9 @@ const mapDispatchToProps = (dispatch, _) =>
                             filesTransferred: 0,
                             totalFiles: sessionTotalFiles,
                             totalFileSizeSent: sessionTotalFileSizeSent,
-                            elapsedTime: sessionElapsedTime,
+                            elapsedTime: formatElapsedTime(
+                              Date.now() - transferStartTime
+                            ),
                           }),
                         })
                       );
@@ -3251,7 +3252,9 @@ const mapDispatchToProps = (dispatch, _) =>
                     filesTransferred: sessionTotalFiles,
                     totalFiles: sessionTotalFiles,
                     totalFileSizeSent: sessionTotalFileSizeSent,
-                    elapsedTime: sessionElapsedTime,
+                    elapsedTime: formatElapsedTime(
+                      Date.now() - transferStartTime
+                    ),
                     avgSpeed,
                     mtpMode,
                   }),

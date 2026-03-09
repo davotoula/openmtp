@@ -51,25 +51,6 @@ export const styles = (theme) => ({
   statsValue: {
     fontWeight: 500,
   },
-  failedFilesSection: {
-    marginTop: 12,
-  },
-  failedFilesToggle: {
-    textTransform: 'none',
-    color: theme.palette.error.main,
-    padding: '4px 8px',
-    fontSize: 13,
-  },
-  failedFilesList: {
-    maxHeight: 150,
-    overflowY: 'auto',
-    padding: '8px 0',
-  },
-  failedFileItem: {
-    fontSize: 12,
-    padding: '2px 8px',
-    wordBreak: 'break-all',
-  },
   btnPositive: {
     ...mixins({ theme }).btnPositive,
   },

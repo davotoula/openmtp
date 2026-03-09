@@ -9,30 +9,13 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
 import Button from '@material-ui/core/Button';
-import Collapse from '@material-ui/core/Collapse';
 import LiveHelpIcon from '@material-ui/icons/LiveHelp';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import { styles } from '../styles/ProgressBar';
 import { checkIf } from '../../../utils/checkIf';
 
 class ProgressBar extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.state = {
-      failedFilesExpanded: false,
-    };
-  }
-
-  _handleToggleFailedFiles = () => {
-    this.setState((prev) => ({
-      failedFilesExpanded: !prev.failedFilesExpanded,
-    }));
-  };
-
   _renderCompletedStats() {
     const { classes: styles, completedStats, onDismiss } = this.props;
-    const { failedFilesExpanded } = this.state;
 
     return (
       <Fragment>
@@ -71,37 +54,6 @@ class ProgressBar extends PureComponent {
               </span>
             </div>
           </div>
-
-          {completedStats.failedFiles && completedStats.failedFiles.length > 0 && (
-            <div className={styles.failedFilesSection}>
-              <Button
-                onClick={this._handleToggleFailedFiles}
-                className={styles.failedFilesToggle}
-                size="small"
-              >
-                {completedStats.failedFiles.length} failed{' '}
-                {completedStats.failedFiles.length === 1 ? 'file' : 'files'}
-                {failedFilesExpanded ? (
-                  <ExpandLessIcon fontSize="small" />
-                ) : (
-                  <ExpandMoreIcon fontSize="small" />
-                )}
-              </Button>
-              <Collapse in={failedFilesExpanded}>
-                <div className={styles.failedFilesList}>
-                  {completedStats.failedFiles.map((f, i) => (
-                    <DialogContentText
-                      // eslint-disable-next-line react/no-array-index-key
-                      key={i}
-                      className={styles.failedFileItem}
-                    >
-                      {f}
-                    </DialogContentText>
-                  ))}
-                </div>
-              </Collapse>
-            </div>
-          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={onDismiss} className={styles.btnPositive}>
