@@ -19,7 +19,7 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 /* Start of preamble from import "C" comments.  */
 
 
-#line 14 "kalam.go"
+#line 12 "kalam.go"
 	#include "stdint.h"
 	typedef void (* on_cb_result_t)(char*);
 

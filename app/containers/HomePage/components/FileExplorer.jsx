@@ -1821,39 +1821,24 @@ class FileExplorer extends Component {
     progressState,
     sourceMetadataMap
   ) => {
-    // Pre-fetch destination directory listing once (avoids N MTP calls).
-    // This cache may become stale as files are transferred, but the trade-off
-    // is acceptable — re-listing per file would be too slow on MTP devices.
     const destFilesMap = await this._getDestinationFilesMap(destinationFolder);
 
-    for (let i = 0; i < sourceDestMap.length; i += 1) {
-      const {
-        sourcePath,
-        destPath,
-        fileName,
-        sourceMeta: entrySourceMeta,
-      } = sourceDestMap[i];
+    // === Phase 1: Classify ===
+    const noConflict = [];
+    const autoReplace = [];
+    const needsDialog = [];
+    const directoryMerge = [];
 
-      // Look up destination file from cached listing
+    for (let i = 0; i < sourceDestMap.length; i += 1) {
+      const entry = sourceDestMap[i];
+      const { sourcePath, fileName, sourceMeta: entrySourceMeta } = entry;
+
       const destMeta = destFilesMap[fileName]
         ? { ...destFilesMap[fileName] }
         : { exists: false, size: null, dateAdded: null, isFolder: null };
 
       if (!destMeta.exists) {
-        // No conflict — transfer directly
-        // eslint-disable-next-line no-await-in-loop
-        const result = await this._transferSingleFile(
-          sourcePath,
-          destinationFolder
-        );
-
-        if (result.success) {
-          progressState.transferred += 1; // eslint-disable-line no-param-reassign
-        } else {
-          progressState.skipped += 1; // eslint-disable-line no-param-reassign
-        }
-
-        this._updateTransferProgress(fileName, progressState);
+        noConflict.push(entry);
         continue; // eslint-disable-line no-continue
       }
 
@@ -1864,87 +1849,173 @@ class FileExplorer extends Component {
       const isDirectory = destMeta.isFolder || sourceMeta.isFolder;
 
       if (isDirectory) {
-        // eslint-disable-next-line no-await-in-loop
-        const action = await this._resolveConflict({
-          conflictMemory,
-          memoryKey: 'directory',
-          conflictType: CONFLICT_TYPE.directory,
-          fileName,
-          sourceMeta,
-          destMeta,
-        });
+        const memoryKey = 'directory';
 
-        if (action === CONFLICT_ACTION.skip) {
+        if (conflictMemory[memoryKey] === CONFLICT_ACTION.skip) {
           progressState.skipped += 1; // eslint-disable-line no-param-reassign
           this._updateTransferProgress(fileName, progressState);
           continue; // eslint-disable-line no-continue
         }
 
-        // Merge: list the source directory contents and recurse
-        // eslint-disable-next-line no-await-in-loop
-        const sourceContents = await this._listSourceDirectoryContents(
-          sourcePath
-        );
-
-        if (sourceContents && sourceContents.length > 0) {
-          // Expand total to include nested files
-          progressState.total += sourceContents.length; // eslint-disable-line no-param-reassign
-
-          const nestedMap = sourceContents.map((child) => ({
-            sourcePath: child.path,
-            destPath: `${destPath}/${child.name}`,
-            fileName: child.name,
-            sourceMeta: {
-              size: child.size ?? null,
-              dateAdded: child.dateAdded ?? null,
-              isFolder: child.isFolder ?? false,
-            },
-          }));
-
-          // eslint-disable-next-line no-await-in-loop
-          await this._processFileQueue(
-            nestedMap,
-            destPath,
-            conflictMemory,
-            progressState,
-            sourceMetadataMap
-          );
+        if (conflictMemory[memoryKey] === CONFLICT_ACTION.merge) {
+          directoryMerge.push({ ...entry, sourceMeta, destMeta });
+          continue; // eslint-disable-line no-continue
         }
+
+        // No cached decision — needs dialog
+        needsDialog.push({
+          ...entry,
+          sourceMeta,
+          destMeta,
+          isDirectory: true,
+          memoryKey,
+        });
       } else {
-        // File conflict
         const sizesMatch = sourceMeta.size === destMeta.size;
         const memoryKey = sizesMatch ? 'sameSize' : 'differentSize';
 
-        // eslint-disable-next-line no-await-in-loop
-        const action = await this._resolveConflict({
-          conflictMemory,
-          memoryKey,
-          conflictType: CONFLICT_TYPE.file,
-          fileName,
-          sourceMeta,
-          destMeta,
-        });
-
-        if (action === CONFLICT_ACTION.skip) {
+        if (conflictMemory[memoryKey] === CONFLICT_ACTION.skip) {
           progressState.skipped += 1; // eslint-disable-line no-param-reassign
           this._updateTransferProgress(fileName, progressState);
           continue; // eslint-disable-line no-continue
         }
 
-        // Replace: transfer the file (overwrite)
-        // eslint-disable-next-line no-await-in-loop
-        const replaceResult = await this._transferSingleFile(
-          sourcePath,
-          destinationFolder
-        );
-
-        if (replaceResult.success) {
-          progressState.transferred += 1; // eslint-disable-line no-param-reassign
-        } else {
-          progressState.skipped += 1; // eslint-disable-line no-param-reassign
+        if (conflictMemory[memoryKey] === CONFLICT_ACTION.replace) {
+          autoReplace.push(entry);
+          continue; // eslint-disable-line no-continue
         }
 
+        // No cached decision — needs dialog
+        needsDialog.push({
+          ...entry,
+          sourceMeta,
+          destMeta,
+          isDirectory: false,
+          memoryKey,
+        });
+      }
+    }
+
+    // === Phase 2: Resolve dialogs ===
+    // Process needsDialog sequentially. After "Apply to all", re-classify remaining.
+    while (needsDialog.length > 0) {
+      const item = needsDialog.shift();
+      const { fileName, sourceMeta, destMeta, isDirectory, memoryKey } = item;
+
+      const conflictType = isDirectory
+        ? CONFLICT_TYPE.directory
+        : CONFLICT_TYPE.file;
+
+      // eslint-disable-next-line no-await-in-loop
+      const action = await this._resolveConflict({
+        conflictMemory,
+        memoryKey,
+        conflictType,
+        fileName,
+        sourceMeta,
+        destMeta,
+      });
+
+      if (action === CONFLICT_ACTION.skip) {
+        progressState.skipped += 1; // eslint-disable-line no-param-reassign
         this._updateTransferProgress(fileName, progressState);
+      } else if (isDirectory) {
+        directoryMerge.push({ ...item, sourceMeta, destMeta });
+      } else {
+        autoReplace.push(item);
+      }
+
+      // Re-classify remaining needsDialog entries if "Apply to all" was set
+      if (conflictMemory[memoryKey] !== null) {
+        const remaining = [...needsDialog];
+
+        needsDialog.length = 0;
+
+        for (let j = 0; j < remaining.length; j += 1) {
+          const r = remaining[j];
+
+          if (r.memoryKey === memoryKey && conflictMemory[memoryKey] !== null) {
+            if (conflictMemory[memoryKey] === CONFLICT_ACTION.skip) {
+              progressState.skipped += 1; // eslint-disable-line no-param-reassign
+              this._updateTransferProgress(r.fileName, progressState);
+            } else if (r.isDirectory) {
+              directoryMerge.push(r);
+            } else {
+              autoReplace.push(r);
+            }
+          } else {
+            needsDialog.push(r);
+          }
+        }
+      }
+    }
+
+    // === Phase 3: Execute ===
+    // Batch transfer non-conflicting files
+    if (noConflict.length > 0) {
+      const sources = noConflict.map((e) => e.sourcePath);
+      const result = await this._transferBatch(sources, destinationFolder);
+
+      if (result.success) {
+        progressState.transferred += noConflict.length; // eslint-disable-line no-param-reassign
+      } else {
+        progressState.skipped += noConflict.length; // eslint-disable-line no-param-reassign
+      }
+
+      this._updateTransferProgress(
+        noConflict[noConflict.length - 1].fileName,
+        progressState
+      );
+    }
+
+    // Batch transfer auto-replace files
+    if (autoReplace.length > 0) {
+      const sources = autoReplace.map((e) => e.sourcePath);
+      const result = await this._transferBatch(sources, destinationFolder);
+
+      if (result.success) {
+        progressState.transferred += autoReplace.length; // eslint-disable-line no-param-reassign
+      } else {
+        progressState.skipped += autoReplace.length; // eslint-disable-line no-param-reassign
+      }
+
+      this._updateTransferProgress(
+        autoReplace[autoReplace.length - 1].fileName,
+        progressState
+      );
+    }
+
+    // Process directory merges — recurse with the same pipeline
+    for (let i = 0; i < directoryMerge.length; i += 1) {
+      const { sourcePath, destPath } = directoryMerge[i];
+
+      // eslint-disable-next-line no-await-in-loop
+      const sourceContents = await this._listSourceDirectoryContents(
+        sourcePath
+      );
+
+      if (sourceContents && sourceContents.length > 0) {
+        progressState.total += sourceContents.length; // eslint-disable-line no-param-reassign
+
+        const nestedMap = sourceContents.map((child) => ({
+          sourcePath: child.path,
+          destPath: `${destPath}/${child.name}`,
+          fileName: child.name,
+          sourceMeta: {
+            size: child.size ?? null,
+            dateAdded: child.dateAdded ?? null,
+            isFolder: child.isFolder ?? false,
+          },
+        }));
+
+        // eslint-disable-next-line no-await-in-loop
+        await this._processFileQueue(
+          nestedMap,
+          destPath,
+          conflictMemory,
+          progressState,
+          sourceMetadataMap
+        );
       }
     }
   };
@@ -2047,7 +2118,11 @@ class FileExplorer extends Component {
     return result.data;
   };
 
-  _transferSingleFile = (sourcePath, destinationFolder) => {
+  _transferBatch = (sourcePaths, destinationFolder) => {
+    if (!sourcePaths || sourcePaths.length === 0) {
+      return Promise.resolve({ success: true, filesSent: 0 });
+    }
+
     const { deviceType, storageId, fileTransferClipboard, actionCreatePaste } =
       this.props;
 
@@ -2058,7 +2133,7 @@ class FileExplorer extends Component {
           storageId,
           fileTransferClipboard: {
             ...fileTransferClipboard,
-            queue: [sourcePath],
+            queue: sourcePaths,
           },
         },
         {
@@ -2066,7 +2141,7 @@ class FileExplorer extends Component {
           ignoreHidden: false,
         },
         deviceType,
-        ({ success }) => resolve({ success })
+        ({ success }) => resolve({ success, filesSent: sourcePaths.length })
       );
     });
   };

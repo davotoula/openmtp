@@ -5,10 +5,8 @@ import (
 	"github.com/ganeshrvel/go-mtpx"
 	jsoniter "github.com/json-iterator/go"
 	"kalam/send_to_js"
-	"log"
 	"os"
 	"strings"
-	"time"
 )
 
 /*	#include "stdint.h"
@@ -302,45 +300,13 @@ func UploadFiles(uploadFilesInputJson *C.char, onPreprocessPtr, onProgressPtr, o
 		return
 	}
 
-	var pInterface interface{}
-
-	ch := make(chan bool)
-	go func() {
-		for {
-			select {
-			case <-ch:
-				close(ch)
-
-				return
-			default:
-				if pInterface != nil {
-					switch v := pInterface.(type) {
-					case UploadPreprocessContainer:
-						send_to_js.SendUploadFilesPreprocess(sendToJsOnPreprocessPtr, v.fi, v.fullPath)
-
-					case ProgressContainer:
-						send_to_js.SendTransferFilesProgress(sendToJsOnProgressPtr, v.pInfo)
-
-					default:
-						log.Panicln("unimplemented UploadFiles.pInterface type")
-					}
-				}
-
-				time.Sleep(time.Millisecond * 500)
-			}
-		}
-	}()
-
 	err = _uploadFiles(i.StorageId, i.Sources, i.Destination, i.PreprocessFiles,
 		func(fi *os.FileInfo, fullPath string, err error) error {
 			if err != nil {
 				return err
 			}
 
-			pInterface = UploadPreprocessContainer{
-				fi:       fi,
-				fullPath: fullPath,
-			}
+			send_to_js.SendUploadFilesPreprocess(sendToJsOnPreprocessPtr, fi, fullPath)
 
 			return nil
 		},
@@ -349,21 +315,15 @@ func UploadFiles(uploadFilesInputJson *C.char, onPreprocessPtr, onProgressPtr, o
 				return err
 			}
 
-			pInterface = ProgressContainer{
-				pInfo: p,
-			}
+			send_to_js.SendTransferFilesProgress(sendToJsOnProgressPtr, p)
 
 			return nil
 		})
 	if err != nil {
 		send_to_js.SendError(sendToJsOnDonePtr, err)
 
-		ch <- true
-
 		return
 	}
-
-	ch <- true
 
 	send_to_js.SendTransferFilesDone(sendToJsOnDonePtr)
 }
@@ -390,44 +350,13 @@ func DownloadFiles(downloadFilesInputJson *C.char, onPreprocessPtr, onProgressPt
 		return
 	}
 
-	var pInterface interface{}
-
-	ch := make(chan bool)
-	go func() {
-		for {
-			select {
-			case <-ch:
-				close(ch)
-
-				return
-			default:
-				if pInterface != nil {
-					switch v := pInterface.(type) {
-					case DownloadPreprocessContainer:
-						send_to_js.SendDownloadFilesPreprocess(sendToJsOnPreprocessPtr, v.fi)
-
-					case ProgressContainer:
-						send_to_js.SendTransferFilesProgress(sendToJsOnProgressPtr, v.pInfo)
-
-					default:
-						log.Panicln("unimplemented DownloadFiles.pInterface type")
-					}
-				}
-
-				time.Sleep(time.Millisecond * 500)
-			}
-		}
-	}()
-
 	err = _downloadFiles(i.StorageId, i.Sources, i.Destination, i.PreprocessFiles,
 		func(fi *mtpx.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 
-			pInterface = DownloadPreprocessContainer{
-				fi: fi,
-			}
+			send_to_js.SendDownloadFilesPreprocess(sendToJsOnPreprocessPtr, fi)
 
 			return nil
 		},
@@ -436,21 +365,15 @@ func DownloadFiles(downloadFilesInputJson *C.char, onPreprocessPtr, onProgressPt
 				return err
 			}
 
-			pInterface = ProgressContainer{
-				pInfo: p,
-			}
+			send_to_js.SendTransferFilesProgress(sendToJsOnProgressPtr, p)
 
 			return nil
 		})
 	if err != nil {
 		send_to_js.SendError(sendToJsOnDonePtr, err)
 
-		ch <- true
-
 		return
 	}
-
-	ch <- true
 
 	send_to_js.SendTransferFilesDone(sendToJsOnDonePtr)
 }
