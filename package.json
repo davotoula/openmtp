@@ -6,9 +6,9 @@
   "scripts": {
     "build": "yarn lint && concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-no-verify": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
-    "build-dll": "cross-env NODE_ENV=development NODE_OPTIONS=--openssl-legacy-provider webpack --config ./webpack/config.renderer.dev.dll.babel.js --color",
-    "build-main": "cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider webpack --config ./webpack/config.main.prod.babel.js --color",
-    "build-renderer": "cross-env NODE_ENV=production NODE_OPTIONS=--openssl-legacy-provider webpack --config ./webpack/config.renderer.prod.babel.js --color",
+    "build-dll": "cross-env NODE_ENV=development webpack --config ./webpack/config.renderer.dev.dll.babel.js --color",
+    "build-main": "cross-env NODE_ENV=production webpack --config ./webpack/config.main.prod.babel.js --color",
+    "build-renderer": "cross-env NODE_ENV=production webpack --config ./webpack/config.renderer.prod.babel.js --color",
     "dev": "cross-env NODE_ENV=development START_HOT=1 node -r @babel/register ./internals/scripts/CheckPortInUse.js && cross-env START_HOT=1 yarn start-renderer-dev",
     "dev-kalam-ffi": "./ffi/kalam/native/scripts/build.sh && yarn dev",
     "package": "yarn build && electron-builder --config electron-builder-config.js build --publish never",
@@ -22,7 +22,7 @@
     "prestart": "yarn build",
     "start": "cross-env NODE_ENV=production ./app/main.prod.js",
     "start-main-dev": "cross-env START_HOT=1 NODE_ENV=development run-electron -r @babel/register ./app/main.dev.js",
-    "start-renderer-dev": "cross-env NODE_ENV=development NODE_OPTIONS=--openssl-legacy-provider webpack serve --config webpack/config.renderer.dev.babel.js",
+    "start-renderer-dev": "cross-env NODE_ENV=development webpack serve --config webpack/config.renderer.dev.babel.js",
     "publish-mac": "yarn build && electron-builder --config electron-builder-config.js build --mac --publish always",
     "publish-mac-no-verify": "yarn build-no-verify && cross-env electron-builder --config electron-builder-config.js build --mac --publish always",
     "dev-docs": "cross-env NODE_ENV=development webpack serve --config docs-sources/webpack/webpack.config.base.js",
@@ -180,7 +180,7 @@
     "eslint-import-resolver-webpack": "^0.13.2",
     "eslint-plugin-compat": "^4.0.2",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsdoc": "^50.0.0",
+    "eslint-plugin-jsdoc": "^39.6.2",
     "eslint-plugin-jsx-a11y": "^6.6.1",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-promise": "^6.1.1",
@@ -235,7 +235,7 @@
   },
   "devEngines": {
     "node": ">=16.x",
-    "npm": ">=6.x",
+    "npm": ">=6.x <=8.16.0",
     "yarn": ">=0.21.3"
   }
 }
