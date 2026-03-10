@@ -1,14 +1,14 @@
 const { execSync } = require('child_process');
 const { semverSatisfies } = require('./semver');
 
-const requiredVersionRange = '>=6.x';
+const requiredVersionRange = '>=6.x <=8.16.0';
 
 try {
   const npmVersion = execSync('npm -v').toString().trim();
 
   if (!semverSatisfies(npmVersion, requiredVersionRange)) {
     console.error(
-      `Error: This project requires npm version ${requiredVersionRange}. You have version ${npmVersion}.`
+      `Error: This project requires npm version ${requiredVersionRange}. You have version ${npmVersion}.\nPlease downgrade your npm, this is due to a bug in node-gyp. Github issue: https://github.com/ganeshrvel/openmtp/issues/367.\ncommand: npm install -g npm@8.16.0`
     );
     process.exit(1);
   }
