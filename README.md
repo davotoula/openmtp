@@ -1,19 +1,3 @@
-# Purpose of fork : File transfer resume
-
-It happens quite often that a large file transfer is interrupted. This can be due to phone overheating, phone disk unreliable, loose cable and etc.
-
-I have added a features to:
-
-- Merge or skip directories already present on destination
-- Replace or skip same size files already present on destination
-- Replace or skip different size files already present on destination
-- 3 separate memories to "apply to all" for the above
-
-Resume usage:
-
-- Existing folders: Merge, apply to all
-- Existing files: Skip, apply to all
-
 # OpenMTP | Android File Transfer for macOS
 
 - Author: [Ganesh Rathinavel](https://www.linkedin.com/in/ganeshrvel 'Ganesh Rathinavel')
