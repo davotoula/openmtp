@@ -138,6 +138,20 @@ import { DEVICE_TYPE } from '../../enums';
 
 **Icons** — Font Awesome via `@fortawesome/react-fontawesome`. MUI icons also available.
 
+**Dialog buttons** — the app uses a dark theme where MUI's default `color="primary"` renders invisible button text. Never use `color="primary"` or `color="secondary"` on buttons. Instead, use the `btnPositive` / `btnNegative` mixins from `app/styles/js/mixins.js`:
+
+```js
+import { mixins } from '../../../styles/js';
+
+export const styles = (theme) => ({
+  btnPositive: {
+    ...mixins({ theme }).btnPositive,
+  },
+});
+```
+
+Then apply via `className={styles.btnPositive}`. All existing dialog components (`Confirm`, `Notification`, `TextFieldEdit`, `Conflict`) follow this pattern.
+
 ---
 
 ## Dev Commands

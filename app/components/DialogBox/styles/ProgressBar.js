@@ -1,4 +1,6 @@
-export const styles = (_) => ({
+import { mixins } from '../../../styles/js';
+
+export const styles = (theme) => ({
   root: {
     flexGrow: 1,
   },
@@ -30,5 +32,26 @@ export const styles = (_) => ({
   },
   childrenWrapper: {
     padding: '0px 0 5px 0',
+  },
+  statsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    padding: '8px 0',
+  },
+  statsRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: 14,
+  },
+  statsLabel: {
+    color: theme.palette.text.secondary,
+  },
+  statsValue: {
+    fontWeight: 500,
+  },
+  btnPositive: {
+    ...mixins({ theme }).btnPositive,
   },
 });

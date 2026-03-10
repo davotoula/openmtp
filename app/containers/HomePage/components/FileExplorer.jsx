@@ -176,12 +176,66 @@ const socialMediaShareBtnsList = [
   },
 ];
 
+const formatElapsedTime = (ms) => {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const parts = [];
+
+  if (hours > 0) {
+    parts.push(`${hours}h`);
+  }
+
+  if (minutes > 0) {
+    parts.push(`${minutes}m`);
+  }
+
+  parts.push(`${seconds}s`);
+
+  return parts.join(' ');
+};
+
+const formatAvgSpeed = ({ avgSpeed, mtpMode }) => {
+  if (!avgSpeed) {
+    return '--';
+  }
+
+  return mtpMode === MTP_MODE.legacy
+    ? `${niceBytes(avgSpeed * 1000 * 1000)}/s`
+    : `${avgSpeed.toFixed(2)} MB/s`;
+};
+
+const buildCompletedStats = ({
+  filesTransferred,
+  totalFiles,
+  filesSkipped = 0,
+  totalFileSizeSent,
+  elapsedTime,
+  avgSpeed,
+  mtpMode,
+}) => ({
+  filesTransferred,
+  totalFiles,
+  filesSkipped,
+  totalSize: totalFileSizeSent ? niceBytes(totalFileSizeSent) : '--',
+  elapsedTime: elapsedTime || '--',
+  averageSpeed: formatAvgSpeed({ avgSpeed, mtpMode }),
+});
+
 class FileExplorer extends Component {
   constructor(props) {
     super(props);
 
     this.mainWindowRendererProcess = getMainWindowRendererProcess();
     this.filesDragGhostImg = this._createDragIcon();
+
+    this._totalFileSizeSent = 0;
+    this._transferSpeeds = [];
+    this._mtpMode = null;
+    this._totalFilesSent = 0;
+    this._transferStartTime = null;
 
     this.initialState = {
       conflictDialog: {
@@ -1772,6 +1826,13 @@ class FileExplorer extends Component {
     // Shared progress state — mutated by both main and recursive loops
     const progressState = { transferred: 0, skipped: 0, total: totalFiles };
 
+    // Reset session stats accumulators
+    this._totalFileSizeSent = 0;
+    this._transferSpeeds = [];
+    this._mtpMode = null;
+    this._totalFilesSent = 0;
+    this._transferStartTime = Date.now();
+
     // Show the transfer progress dialog
     actionSetFileTransferProgress({
       titleText: `Copying files to ${DEVICES_LABEL[deviceType]}...`,
@@ -1809,8 +1870,54 @@ class FileExplorer extends Component {
         sourceMetadataMap
       );
     } finally {
-      // Always clean up — refresh directory listing even if an error occurred
-      this._refreshDirectoryListing();
+      const { actionSetFileTransferProgress } = this.props;
+      const hadActivity =
+        progressState.transferred > 0 || progressState.skipped > 0;
+      const hasStats = this._totalFilesSent > 0;
+
+      if (hasStats || hadActivity) {
+        // Determine title based on outcome
+        let titleText = 'Transfer Complete';
+
+        if (progressState.transferred === 0 && progressState.skipped > 0) {
+          titleText = 'All Files Skipped';
+        } else if (
+          progressState.transferred === 0 &&
+          progressState.skipped === 0
+        ) {
+          titleText = 'Transfer Failed';
+        } else if (
+          progressState.transferred <
+          progressState.total - progressState.skipped
+        ) {
+          titleText = 'Transfer Partially Complete';
+        }
+
+        getCurrentWindow().setProgressBar(-1);
+
+        const filesTransferred = this._totalFilesSent || 0;
+
+        actionSetFileTransferProgress({
+          titleText,
+          toggle: true,
+          completedStats: buildCompletedStats({
+            filesTransferred,
+            totalFiles: progressState.total,
+            filesSkipped: progressState.skipped,
+            totalFileSizeSent: this._totalFileSizeSent || null,
+            elapsedTime: formatElapsedTime(
+              Date.now() - this._transferStartTime
+            ),
+            avgSpeed:
+              this._transferSpeeds.length > 0
+                ? arrayAverage(this._transferSpeeds)
+                : null,
+            mtpMode: this._mtpMode,
+          }),
+        });
+      } else {
+        this._refreshDirectoryListing();
+      }
     }
   };
 
@@ -1824,7 +1931,10 @@ class FileExplorer extends Component {
     const destFilesMap = await this._getDestinationFilesMap(destinationFolder);
 
     // === Phase 1: Classify ===
+    // Directories are not counted in progress stats — only files are.
+    // Directories go to noConflictDirs (no conflict) or directoryMerge (conflict).
     const noConflict = [];
+    const noConflictDirs = [];
     const autoReplace = [];
     const needsDialog = [];
     const directoryMerge = [];
@@ -1837,23 +1947,28 @@ class FileExplorer extends Component {
         ? { ...destFilesMap[fileName] }
         : { exists: false, size: null, dateAdded: null, isFolder: null };
 
-      if (!destMeta.exists) {
-        noConflict.push(entry);
-        continue; // eslint-disable-line no-continue
-      }
-
-      // Conflict detected — determine type
       const defaultMeta = { size: null, dateAdded: null, isFolder: false };
       const sourceMeta =
         entrySourceMeta || sourceMetadataMap[sourcePath] || defaultMeta;
       const isDirectory = destMeta.isFolder || sourceMeta.isFolder;
 
+      if (!destMeta.exists) {
+        if (isDirectory) {
+          noConflictDirs.push(entry);
+        } else {
+          noConflict.push(entry);
+        }
+
+        continue; // eslint-disable-line no-continue
+      }
+
+      // Conflict detected — determine type
       if (isDirectory) {
         const memoryKey = 'directory';
 
+        // Directories don't count toward progress — just route them
         if (conflictMemory[memoryKey] === CONFLICT_ACTION.skip) {
-          progressState.skipped += 1; // eslint-disable-line no-param-reassign
-          this._updateTransferProgress(fileName, progressState);
+          progressState.total -= 1; // eslint-disable-line no-param-reassign
           continue; // eslint-disable-line no-continue
         }
 
@@ -1917,8 +2032,13 @@ class FileExplorer extends Component {
       });
 
       if (action === CONFLICT_ACTION.skip) {
-        progressState.skipped += 1; // eslint-disable-line no-param-reassign
-        this._updateTransferProgress(fileName, progressState);
+        if (isDirectory) {
+          // Directories don't count toward progress
+          progressState.total -= 1; // eslint-disable-line no-param-reassign
+        } else {
+          progressState.skipped += 1; // eslint-disable-line no-param-reassign
+          this._updateTransferProgress(fileName, progressState);
+        }
       } else if (isDirectory) {
         directoryMerge.push({ ...item, sourceMeta, destMeta });
       } else {
@@ -1936,8 +2056,13 @@ class FileExplorer extends Component {
 
           if (r.memoryKey === memoryKey && conflictMemory[memoryKey] !== null) {
             if (conflictMemory[memoryKey] === CONFLICT_ACTION.skip) {
-              progressState.skipped += 1; // eslint-disable-line no-param-reassign
-              this._updateTransferProgress(r.fileName, progressState);
+              if (r.isDirectory) {
+                // Directories don't count toward progress
+                progressState.total -= 1; // eslint-disable-line no-param-reassign
+              } else {
+                progressState.skipped += 1; // eslint-disable-line no-param-reassign
+                this._updateTransferProgress(r.fileName, progressState);
+              }
             } else if (r.isDirectory) {
               directoryMerge.push(r);
             } else {
@@ -1951,19 +2076,33 @@ class FileExplorer extends Component {
     }
 
     // === Phase 3: Execute ===
-    // Batch transfer non-conflicting files
-    if (noConflict.length > 0) {
-      const sources = noConflict.map((e) => e.sourcePath);
+    // Batch transfer non-conflicting entries (files and directories together)
+    const noConflictAll = [...noConflictDirs, ...noConflict];
+
+    if (noConflictAll.length > 0) {
+      const sources = noConflictAll.map((e) => e.sourcePath);
       const result = await this._transferBatch(sources, destinationFolder);
+      const nativeFilesSent = result.sessionStats?.totalFilesSent || 0;
+
+      if (result.sessionStats) {
+        this._accumulateSessionStats(result.sessionStats);
+        this._totalFilesSent += nativeFilesSent;
+      }
+
+      // Replace directory entries in total with the actual file count from
+      // the native layer, which includes files inside those directories.
+      // total currently counts: noConflict.length (files) + noConflictDirs.length (dirs)
+      // We want it to reflect the actual files the native layer saw.
+      progressState.total += nativeFilesSent - noConflictAll.length; // eslint-disable-line no-param-reassign
 
       if (result.success) {
-        progressState.transferred += noConflict.length; // eslint-disable-line no-param-reassign
+        progressState.transferred += nativeFilesSent; // eslint-disable-line no-param-reassign
       } else {
         progressState.skipped += noConflict.length; // eslint-disable-line no-param-reassign
       }
 
       this._updateTransferProgress(
-        noConflict[noConflict.length - 1].fileName,
+        noConflictAll[noConflictAll.length - 1].fileName,
         progressState
       );
     }
@@ -1972,6 +2111,11 @@ class FileExplorer extends Component {
     if (autoReplace.length > 0) {
       const sources = autoReplace.map((e) => e.sourcePath);
       const result = await this._transferBatch(sources, destinationFolder);
+
+      if (result.sessionStats) {
+        this._accumulateSessionStats(result.sessionStats);
+        this._totalFilesSent += result.sessionStats.totalFilesSent || 0;
+      }
 
       if (result.success) {
         progressState.transferred += autoReplace.length; // eslint-disable-line no-param-reassign
@@ -1993,6 +2137,9 @@ class FileExplorer extends Component {
       const sourceContents = await this._listSourceDirectoryContents(
         sourcePath
       );
+
+      // The directory entry itself doesn't transfer as a file — replace it with its contents
+      progressState.total -= 1; // eslint-disable-line no-param-reassign
 
       if (sourceContents && sourceContents.length > 0) {
         progressState.total += sourceContents.length; // eslint-disable-line no-param-reassign
@@ -2136,14 +2283,23 @@ class FileExplorer extends Component {
             queue: sourcePaths,
           },
         },
-        {
-          filePath: destinationFolder,
-          ignoreHidden: false,
-        },
         deviceType,
-        ({ success }) => resolve({ success, filesSent: sourcePaths.length })
+        ({ success, sessionStats }) =>
+          resolve({ success, filesSent: sourcePaths.length, sessionStats })
       );
     });
+  };
+
+  _accumulateSessionStats = (stats) => {
+    this._totalFileSizeSent += stats.totalFileSizeSent || 0;
+
+    if (stats.avgSpeed) {
+      this._transferSpeeds.push(stats.avgSpeed);
+    }
+
+    if (stats.mtpMode) {
+      this._mtpMode = stats.mtpMode;
+    }
   };
 
   _updateTransferProgress = (fileName, progressState) => {
@@ -2175,6 +2331,10 @@ class FileExplorer extends Component {
         },
       ],
     });
+  };
+
+  _handleTransferDialogDismiss = () => {
+    this._refreshDirectoryListing();
   };
 
   _refreshDirectoryListing = () => {
@@ -2458,90 +2618,94 @@ class FileExplorer extends Component {
           fullWidthDialog
           maxWidthDialog="sm"
           helpText="If the progress bar freezes while transferring the files, restart the app and reconnect the device. This is a known Android MTP bug."
+          completedStats={fileTransferProgess.completedStats || null}
+          onDismiss={this._handleTransferDialogDismiss}
         >
-          <div className={styles.socialMediaShareContainer}>
-            <Typography className={styles.supportBtnsTitle}>
-              {`I've invested a significant amount of my time and energy into developing and maintaining this OpenSource application.`}
-              <span className={styles.supportBtnsTitleNewLine}>
-                {`I hate to run ads.`}&nbsp;Help me keep {APP_NAME}
-                &nbsp;
-                <span className={styles.supportBtnsBoldText}>Free</span>
-                &nbsp;and&nbsp;
-                <span className={styles.supportBtnsBoldText}>Open</span>!
-              </span>
-            </Typography>
-            <div className={styles.supportBtnsContainer}>
-              {supportBtnsList.map((a, index) => (
-                // eslint-disable-next-line react/no-array-index-key
-                <Tooltip key={index} title={a.label}>
-                  <div>
-                    <div
-                      aria-label={a.label}
-                      onClick={() => {
-                        analyticsService.sendEvent(
-                          EVENT_TYPE.SUPPORT_CTAS_DURING_TRANSFERRING,
-                          {
-                            name: a.name,
-                          }
-                        );
-                        openExternalUrl(a.url);
-                      }}
-                      className={classnames(styles.supportBtnWrapper, {
-                        [styles.supportBtnWrapperForImage]: !!a.image,
-                      })}
-                    >
-                      {a.image && (
-                        <img
-                          alt={a.label}
-                          src={imgsrc(a.image, false)}
-                          className={classnames(styles.supportBtnImages, {
-                            [`${a.name}`]: true,
-                          })}
-                        />
-                      )}
+          {!fileTransferProgess.completedStats && (
+            <div className={styles.socialMediaShareContainer}>
+              <Typography className={styles.supportBtnsTitle}>
+                {`I've invested a significant amount of my time and energy into developing and maintaining this OpenSource application.`}
+                <span className={styles.supportBtnsTitleNewLine}>
+                  {`I hate to run ads.`}&nbsp;Help me keep {APP_NAME}
+                  &nbsp;
+                  <span className={styles.supportBtnsBoldText}>Free</span>
+                  &nbsp;and&nbsp;
+                  <span className={styles.supportBtnsBoldText}>Open</span>!
+                </span>
+              </Typography>
+              <div className={styles.supportBtnsContainer}>
+                {supportBtnsList.map((a, index) => (
+                  // eslint-disable-next-line react/no-array-index-key
+                  <Tooltip key={index} title={a.label}>
+                    <div>
+                      <div
+                        aria-label={a.label}
+                        onClick={() => {
+                          analyticsService.sendEvent(
+                            EVENT_TYPE.SUPPORT_CTAS_DURING_TRANSFERRING,
+                            {
+                              name: a.name,
+                            }
+                          );
+                          openExternalUrl(a.url);
+                        }}
+                        className={classnames(styles.supportBtnWrapper, {
+                          [styles.supportBtnWrapperForImage]: !!a.image,
+                        })}
+                      >
+                        {a.image && (
+                          <img
+                            alt={a.label}
+                            src={imgsrc(a.image, false)}
+                            className={classnames(styles.supportBtnImages, {
+                              [`${a.name}`]: true,
+                            })}
+                          />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </Tooltip>
-              ))}
-            </div>
+                  </Tooltip>
+                ))}
+              </div>
 
-            <Typography className={styles.socialMediaShareTitle}>
-              Liked using the App?
-            </Typography>
-            <div className={styles.socialMediaShareBtnsContainer}>
-              {socialMediaShareBtnsList.map((a, index) => (
-                // eslint-disable-next-line react/no-array-index-key
-                <Tooltip key={index} title={a.label}>
-                  <div>
-                    <IconButton
-                      aria-label={a.label}
-                      disabled={!a.enabled}
-                      onClick={() => openExternalUrl(a.url)}
-                      className={classnames(styles.socialMediaBtnWrapper, {
-                        [styles.socialMediaBtnWrapperForImage]: !!a.image,
-                      })}
-                    >
-                      {a.image && (
-                        <img
-                          alt={a.label}
-                          src={imgsrc(a.image, false)}
-                          className={styles.socialMediaShareBtnImages}
-                        />
-                      )}
+              <Typography className={styles.socialMediaShareTitle}>
+                Liked using the App?
+              </Typography>
+              <div className={styles.socialMediaShareBtnsContainer}>
+                {socialMediaShareBtnsList.map((a, index) => (
+                  // eslint-disable-next-line react/no-array-index-key
+                  <Tooltip key={index} title={a.label}>
+                    <div>
+                      <IconButton
+                        aria-label={a.label}
+                        disabled={!a.enabled}
+                        onClick={() => openExternalUrl(a.url)}
+                        className={classnames(styles.socialMediaBtnWrapper, {
+                          [styles.socialMediaBtnWrapperForImage]: !!a.image,
+                        })}
+                      >
+                        {a.image && (
+                          <img
+                            alt={a.label}
+                            src={imgsrc(a.image, false)}
+                            className={styles.socialMediaShareBtnImages}
+                          />
+                        )}
 
-                      {a.icon && (
-                        <FontAwesomeIcon
-                          icon={a.icon}
-                          className={styles.socialMediaShareBtn}
-                          title={a.label}
-                        />
-                      )}
-                    </IconButton>
-                  </div>
-                </Tooltip>
-              ))}
+                        {a.icon && (
+                          <FontAwesomeIcon
+                            icon={a.icon}
+                            className={styles.socialMediaShareBtn}
+                            title={a.label}
+                          />
+                        )}
+                      </IconButton>
+                    </div>
+                  </Tooltip>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </ProgressBarDialog>
         <ConflictDialog
           trigger={conflictDialog.open}
@@ -2882,17 +3046,14 @@ const mapDispatchToProps = (dispatch, _) =>
         },
 
       actionCreatePaste:
-        (
-          { ...pasteArgs },
-          { ...listDirectoryArgs },
-          deviceType,
-          onSingleFileComplete
-        ) =>
+        ({ ...pasteArgs }, deviceType, onSingleFileComplete) =>
         (_, getState) => {
+          const transferStartTime = Date.now();
           let sessionElapsedTime = 0;
           const sessionTransferSpeeds = [];
           let sessionTotalFiles = 0;
           let sessionTransferDirection;
+          let sessionTotalFileSizeSent = 0;
 
           try {
             const { mtpMode, filesPreprocessingBeforeTransfer } =
@@ -2951,6 +3112,12 @@ const mapDispatchToProps = (dispatch, _) =>
               sessionElapsedTime = elapsedTime;
               sessionTotalFiles = totalFiles;
               sessionTransferDirection = direction;
+
+              if (totalFileSizeSent) {
+                sessionTotalFileSizeSent = totalFileSizeSent;
+              } else {
+                sessionTotalFileSizeSent = activeFileSizeSent;
+              }
 
               /// file transfer progress on legacy mode
               if (mtpMode === MTP_MODE.legacy) {
@@ -3049,13 +3216,20 @@ const mapDispatchToProps = (dispatch, _) =>
                   onSuccess: () => {
                     if (!onSingleFileComplete) {
                       getCurrentWindow().setProgressBar(-1);
-                      dispatch(clearFileTransfer());
+
                       dispatch(
-                        listDirectory(
-                          { ...listDirectoryArgs },
-                          deviceType,
-                          getState
-                        )
+                        setFileTransferProgress({
+                          titleText: 'Transfer Failed',
+                          toggle: true,
+                          completedStats: buildCompletedStats({
+                            filesTransferred: 0,
+                            totalFiles: sessionTotalFiles,
+                            totalFileSizeSent: sessionTotalFileSizeSent,
+                            elapsedTime: formatElapsedTime(
+                              Date.now() - transferStartTime
+                            ),
+                          }),
+                        })
                       );
                     }
                   },
@@ -3065,45 +3239,65 @@ const mapDispatchToProps = (dispatch, _) =>
               analyticsService.sendEvent(EVENT_TYPE.FILE_TRANSFER_ERROR, {});
 
               if (onSingleFileComplete) {
-                onSingleFileComplete({ success: false });
+                onSingleFileComplete({
+                  success: false,
+                  sessionStats: {
+                    elapsedTime: sessionElapsedTime,
+                    avgSpeed: arrayAverage(sessionTransferSpeeds),
+                    totalFileSizeSent: sessionTotalFileSizeSent,
+                    totalFilesSent: sessionTotalFiles,
+                    mtpMode,
+                  },
+                });
               }
             };
 
             // on completed callback for file transfer
             const onCompleted = () => {
+              const avgSpeed = arrayAverage(sessionTransferSpeeds);
+
+              analyticsService.sendEvent(EVENT_TYPE.FILE_TRANSFER_COMPLETED, {
+                'Transfer direction': sessionTransferDirection,
+                'Total files': sessionTotalFiles,
+                'Average transfer speed': `${avgSpeed} MB/s`,
+                'Elapsed time': sessionElapsedTime,
+                'Is files preprocessing enabled':
+                  filesPreprocessingBeforeTransfer[sessionTransferDirection],
+              });
+
               if (onSingleFileComplete) {
-                // Single-file mode: don't reset progress bar between files
-                analyticsService.sendEvent(EVENT_TYPE.FILE_TRANSFER_COMPLETED, {
-                  'Transfer direction': sessionTransferDirection,
-                  'Total files': sessionTotalFiles,
-                  'Average transfer speed': `${arrayAverage(
-                    sessionTransferSpeeds
-                  )} MB/s`,
-                  'Elapsed time': sessionElapsedTime,
-                  'Is files preprocessing enabled':
-                    filesPreprocessingBeforeTransfer[sessionTransferDirection],
+                onSingleFileComplete({
+                  success: true,
+                  sessionStats: {
+                    elapsedTime: sessionElapsedTime,
+                    avgSpeed,
+                    totalFileSizeSent: sessionTotalFileSizeSent,
+                    totalFilesSent: sessionTotalFiles,
+                    mtpMode,
+                  },
                 });
-                onSingleFileComplete({ success: true });
 
                 return;
               }
 
               getCurrentWindow().setProgressBar(-1);
-              dispatch(clearFileTransfer());
-              dispatch(
-                listDirectory({ ...listDirectoryArgs }, deviceType, getState)
-              );
 
-              analyticsService.sendEvent(EVENT_TYPE.FILE_TRANSFER_COMPLETED, {
-                'Transfer direction': sessionTransferDirection,
-                'Total files': sessionTotalFiles,
-                'Average transfer speed': `${arrayAverage(
-                  sessionTransferSpeeds
-                )} MB/s`,
-                'Elapsed time': sessionElapsedTime,
-                'Is files preprocessing enabled':
-                  filesPreprocessingBeforeTransfer[sessionTransferDirection],
-              });
+              dispatch(
+                setFileTransferProgress({
+                  titleText: 'Transfer Complete',
+                  toggle: true,
+                  completedStats: buildCompletedStats({
+                    filesTransferred: sessionTotalFiles,
+                    totalFiles: sessionTotalFiles,
+                    totalFileSizeSent: sessionTotalFileSizeSent,
+                    elapsedTime: formatElapsedTime(
+                      Date.now() - transferStartTime
+                    ),
+                    avgSpeed,
+                    mtpMode,
+                  }),
+                })
+              );
             };
 
             switch (deviceType) {
