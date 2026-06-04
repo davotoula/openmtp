@@ -278,6 +278,13 @@ class FileExplorer extends Component {
       shift: false,
     };
 
+    // Anchor for Shift-click range selection: the path of the last item
+    // clicked WITHOUT Shift, per pane. Pure UI pointer (not Redux state).
+    this.selectionAnchor = {
+      [DEVICE_TYPE.local]: null,
+      [DEVICE_TYPE.mtp]: null,
+    };
+
     this.usbHotplug = {
       attempts: 0,
       lastAttempted: Date.now(),
@@ -595,6 +602,10 @@ class FileExplorer extends Component {
   _handleListDirectory({ ...args }) {
     const { actionCreateListDirectory, hideHiddenFiles } = this.props;
     const { path, deviceType } = args;
+
+    // A new folder listing invalidates any range anchor from the previous
+    // folder, so a following Shift-click cannot reach back into stale paths.
+    this.selectionAnchor[deviceType] = null;
 
     actionCreateListDirectory(
       {
@@ -2414,6 +2425,47 @@ class FileExplorer extends Component {
 
     const { directoryLists, actionCreateTableClick } = this.props;
     const { selected } = directoryLists[deviceType].queue;
+
+    // Shift-click range selection: select the contiguous range from the
+    // anchor (last item clicked without Shift) to the clicked item, in the
+    // current display order, replacing the existing selection. The anchor
+    // does not move, so re-Shift-clicking grows/shrinks/flips the range.
+    if (event && event.shiftKey && event.type === 'click') {
+      const anchorPath = this.selectionAnchor[deviceType];
+      const { nodes, order, orderBy } = directoryLists[deviceType];
+      const sorted = this.tableSort({ nodes, order, orderBy });
+
+      const anchorIndex = sorted.findIndex((node) => node.path === anchorPath);
+      const clickedIndex = sorted.findIndex((node) => node.path === path);
+
+      // Only extend from the anchor while it is still part of the active
+      // selection. If the selection was cleared in place (deselect-all, cut,
+      // post-transfer refresh) without navigating folders, the anchor path
+      // still exists in the listing — but the user no longer sees it as
+      // selected, so a range from it would be surprising. Treat that as no
+      // anchor and fall back to a single selection.
+      const anchorStillSelected = selected.indexOf(anchorPath) > -1;
+
+      if (anchorStillSelected && anchorIndex > -1 && clickedIndex > -1) {
+        const start = Math.min(anchorIndex, clickedIndex);
+        const end = Math.max(anchorIndex, clickedIndex);
+        const rangeSelected = sorted
+          .slice(start, end + 1)
+          .map((node) => node.path);
+
+        actionCreateTableClick({ selected: rangeSelected }, deviceType);
+
+        return null;
+      }
+
+      // No valid anchor (fresh folder, or anchor no longer present): fall
+      // back to a plain single selection and set this item as the anchor.
+      this.selectionAnchor[deviceType] = path;
+      actionCreateTableClick({ selected: [path] }, deviceType);
+
+      return null;
+    }
+
     const selectedIndex = selected.indexOf(path);
     let _dontAppend = dontAppend;
     let newSelected = [];
@@ -2437,7 +2489,12 @@ class FileExplorer extends Component {
       );
     }
 
+    // Record this non-Shift click as the new anchor for future ranges.
+    this.selectionAnchor[deviceType] = path;
+
     actionCreateTableClick({ selected: newSelected }, deviceType);
+
+    return null;
   };
 
   _handleTableDoubleClick = (item, deviceType) => {
