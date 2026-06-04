@@ -2438,7 +2438,15 @@ class FileExplorer extends Component {
       const anchorIndex = sorted.findIndex((node) => node.path === anchorPath);
       const clickedIndex = sorted.findIndex((node) => node.path === path);
 
-      if (anchorIndex > -1 && clickedIndex > -1) {
+      // Only extend from the anchor while it is still part of the active
+      // selection. If the selection was cleared in place (deselect-all, cut,
+      // post-transfer refresh) without navigating folders, the anchor path
+      // still exists in the listing — but the user no longer sees it as
+      // selected, so a range from it would be surprising. Treat that as no
+      // anchor and fall back to a single selection.
+      const anchorStillSelected = selected.indexOf(anchorPath) > -1;
+
+      if (anchorStillSelected && anchorIndex > -1 && clickedIndex > -1) {
         const start = Math.min(anchorIndex, clickedIndex);
         const end = Math.max(anchorIndex, clickedIndex);
         const rangeSelected = sorted
