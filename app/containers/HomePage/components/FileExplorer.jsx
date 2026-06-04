@@ -2430,7 +2430,7 @@ class FileExplorer extends Component {
     // anchor (last item clicked without Shift) to the clicked item, in the
     // current display order, replacing the existing selection. The anchor
     // does not move, so re-Shift-clicking grows/shrinks/flips the range.
-    if (event && event.shiftKey) {
+    if (event && event.shiftKey && event.type === 'click') {
       const anchorPath = this.selectionAnchor[deviceType];
       const { nodes, order, orderBy } = directoryLists[deviceType];
       const sorted = this.tableSort({ nodes, order, orderBy });
