@@ -20,18 +20,29 @@ These builds are **ad-hoc signed, not notarized** — this fork is a temporary s
 while upstream prepares a rewrite, and notarizing would require a paid Apple Developer
 account. macOS therefore blocks the app on first launch.
 
-After dragging the app to `/Applications`, open it once via:
+**1. Move the app to `/Applications` first.** Do not run it from `Downloads`. macOS
+applies "app translocation" to quarantined apps launched from the Downloads folder — it
+silently runs them from a randomised read-only location, which usually shows up as the
+icon bouncing once and the app never opening.
+
+**2. Then open it once via:**
 
 **System Settings → Privacy & Security → scroll to "OpenMTP-resume was blocked" → Open Anyway**
 
 macOS remembers the choice, so this is only needed on first launch and after each update.
 Right-click → Open no longer works for this on macOS 15 (Sequoia) and newer.
 
-If you prefer the terminal, this achieves the same thing in one step:
+If you prefer the terminal, this achieves the same thing in one step (again, only after
+the app has been moved to `/Applications`):
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/OpenMTP-resume.app
 ```
+
+### If the icon just bounces and nothing opens
+
+The app is still quarantined, or it is being run from `Downloads`. Move it to
+`/Applications` and repeat step 2 above.
 
 # OpenMTP | Android File Transfer for macOS
 
