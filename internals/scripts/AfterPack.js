@@ -3,6 +3,11 @@ const { execFileSync } = require('child_process');
 const glob = require('glob');
 const fs = require('fs-extra');
 
+// Invoked by absolute path rather than by name: resolving `codesign` through
+// PATH would let any writable directory listed there shadow the real binary.
+// /usr/bin lives on the sealed, read-only system volume.
+const CODESIGN_BIN = '/usr/bin/codesign';
+
 // When a real Developer ID is configured, electron-builder signs the app itself
 // during the step that runs after this hook, so we must not touch it here.
 const hasSigningIdentity = () =>
@@ -21,11 +26,11 @@ const hasSigningIdentity = () =>
 // seal, which downgrades that to the ordinary "unidentified developer" prompt
 // users can clear via System Settings > Privacy & Security > Open Anyway.
 const adhocSign = (appPath) => {
-  execFileSync('codesign', ['--force', '--deep', '--sign', '-', appPath], {
+  execFileSync(CODESIGN_BIN, ['--force', '--deep', '--sign', '-', appPath], {
     stdio: 'inherit',
   });
 
-  execFileSync('codesign', ['--verify', '--deep', '--strict', appPath], {
+  execFileSync(CODESIGN_BIN, ['--verify', '--deep', '--strict', appPath], {
     stdio: 'inherit',
   });
 };
