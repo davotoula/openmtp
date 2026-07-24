@@ -3,7 +3,6 @@
 import './services/sentry/index';
 
 import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
-import electronIs from 'electron-is';
 import usbDetect from 'usb-detection';
 import process from 'process';
 import MenuBuilder from './menu';
@@ -12,12 +11,10 @@ import { DEBUG_PROD, ENV_FLAVOR, IS_DEV, IS_PROD } from './constants/env';
 import AppUpdate from './classes/AppUpdate';
 import { PATHS } from './constants/paths';
 import { settingsStorage } from './helpers/storageHelper';
-import { AUTO_UPDATE_CHECK_FIREUP_DELAY } from './constants';
 import { appEvents } from './utils/eventHandling';
 import { bootLoader } from './helpers/bootHelper';
 import { nonBootableDeviceWindow } from './helpers/createWindows';
 import { APP_TITLE } from './constants/meta';
-import { isPackaged } from './utils/isPackaged';
 import { getWindowBackgroundColor } from './helpers/windowHelper';
 import {
   APP_THEME_MODE_TYPE,
@@ -37,7 +34,6 @@ const remote = getRemoteWindow();
 
 const isSingleInstance = app.requestSingleInstanceLock();
 const isDeviceBootable = bootTheDevice();
-const isMas = electronIs.mas();
 let mainWindow = null;
 
 if (IS_PROD) {
@@ -257,11 +253,13 @@ if (!isDeviceBootable) {
       try {
         await createWindow();
 
-        let appUpdaterEnable = true;
-
-        if (isPackaged && process.platform === 'darwin') {
-          appUpdaterEnable = !isMas && app.isInApplicationsFolder();
-        }
+        // Auto-update is disabled in this fork. Its builds are ad-hoc signed
+        // rather than notarized (there is no Apple Developer ID), which
+        // electron-updater cannot verify, and the release feed still points at
+        // the upstream repository — so an update would hand users a different
+        // app. This also hides the "Check for Updates" menu entries, which are
+        // gated on this flag in menu.js.
+        const appUpdaterEnable = false;
 
         const autoUpdateCheckSettings = settingsStorage.getItems([
           'enableBackgroundAutoUpdate',
@@ -288,12 +286,6 @@ if (!isDeviceBootable) {
         });
 
         menuBuilder.buildMenu();
-
-        if (autoUpdateCheck && appUpdaterEnable) {
-          setTimeout(() => {
-            autoAppUpdate.checkForUpdates();
-          }, AUTO_UPDATE_CHECK_FIREUP_DELAY);
-        }
 
         // send attach and detach events to the renderer
         usbDetect.startMonitoring();

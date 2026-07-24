@@ -27,6 +27,17 @@ exports.default = async (context) => {
   const appleIdPassword = process.env.APPLE_APP_SPECIFIC_PASSWORD;
   const appleTeamId = process.env.APPLE_TEAM_ID;
 
+  // Notarization needs a paid Apple Developer account. Without one the build
+  // still has to succeed: AfterPack has already applied an ad-hoc signature so
+  // the bundle is at least structurally valid for Gatekeeper.
+  if (!appleId || !appleIdPassword || !appleTeamId) {
+    console.info(
+      'Skipping notarization: no Apple credentials found. The app is ad-hoc signed instead.'
+    );
+
+    return;
+  }
+
   if (!fs.existsSync(appPath)) {
     throw new Error(`Cannot find application at: ${appPath}`);
   }

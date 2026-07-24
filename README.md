@@ -14,6 +14,25 @@ Resume usage:
 - Existing folders: Merge, apply to all
 - Existing files: Skip, apply to all
 
+## Installing this fork
+
+These builds are **ad-hoc signed, not notarized** — this fork is a temporary stopgap
+while upstream prepares a rewrite, and notarizing would require a paid Apple Developer
+account. macOS therefore blocks the app on first launch.
+
+After dragging the app to `/Applications`, open it once via:
+
+**System Settings → Privacy & Security → scroll to "OpenMTP-resume was blocked" → Open Anyway**
+
+macOS remembers the choice, so this is only needed on first launch and after each update.
+Right-click → Open no longer works for this on macOS 15 (Sequoia) and newer.
+
+If you prefer the terminal, this achieves the same thing in one step:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/OpenMTP-resume.app
+```
+
 # OpenMTP | Android File Transfer for macOS
 
 - Author: [Ganesh Rathinavel](https://www.linkedin.com/in/ganeshrvel 'Ganesh Rathinavel')

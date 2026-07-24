@@ -45,17 +45,24 @@ module.exports = () => {
   return {
     productName: 'OpenMTP-resume',
     appId: 'io.ganeshrvel.openmtp',
-    forceCodeSigning: true,
+    // This fork has no Apple Developer ID, so electron-builder finds no signing
+    // identity and would abort the build here. AfterPack applies an ad-hoc
+    // signature instead; re-enable this if a real certificate is ever configured.
+    forceCodeSigning: false,
     // eslint-disable-next-line no-template-curly-in-string
     artifactName: '${name}-${version}-${os}-${arch}.${ext}',
     copyright: '© Ganesh Rathinavel',
     afterPack: './internals/scripts/AfterPack.js',
     afterSign: './internals/scripts/Notarize.js',
     npmRebuild: false,
+    // Points at this fork so `--publish always` uploads here rather than to the
+    // upstream repository. The generated app-update.yml is inert while
+    // auto-update is disabled in main.dev.js, but it should still not advertise
+    // upstream as this build's update source.
     publish: [
       {
         provider: 'github',
-        owner: 'ganeshrvel',
+        owner: 'davotoula',
         repo: 'openmtp',
         private: false,
       },
