@@ -39,7 +39,10 @@ export default class SettingsDialog extends PureComponent {
       tabIndex: 0,
     };
 
-    this.isMasHidePosition = 1;
+    // Tab positions that are never shown. The Updates tab (2) is hidden because
+    // this fork disables auto-update entirely, so its switches would persist
+    // settings that nothing acts on.
+    this.hiddenTabPositions = [...(isMas ? [1] : []), 2];
   }
 
   _handleTabChange = (event, index) => {
@@ -49,19 +52,18 @@ export default class SettingsDialog extends PureComponent {
   };
 
   shoudThisTabHeadRender = (position) => {
-    return !(isMas && this.isMasHidePosition === position);
+    return !this.hiddenTabPositions.includes(position);
   };
 
   tabBodyRenderTabIndex = (position) => {
-    if (isMas && this.isMasHidePosition === position) {
+    if (this.hiddenTabPositions.includes(position)) {
       return null;
     }
 
-    if (isMas && position > this.isMasHidePosition) {
-      return position - 1 < 1 ? 0 : position - 1;
-    }
-
-    return position;
+    // every hidden tab ahead of this one shifts its rendered index down by one
+    return (
+      position - this.hiddenTabPositions.filter((it) => it < position).length
+    );
   };
 
   render() {
