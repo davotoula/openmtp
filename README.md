@@ -1,4 +1,4 @@
-# Purpose of fork : File transfer resume
+# Purpose of fork : File transfer resume, shift select range of files
 
 It happens quite often that a large file transfer is interrupted. This can be due to phone overheating, phone disk unreliable, loose cable and etc.
 
@@ -8,6 +8,8 @@ I have added a features to:
 - Replace or skip same size files already present on destination
 - Replace or skip different size files already present on destination
 - 3 separate memories to "apply to all" for the above
+- Shift select ranges of files
+- Command select to add to the range
 
 Resume usage:
 
