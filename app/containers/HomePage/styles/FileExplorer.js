@@ -13,8 +13,13 @@ export const styles = (theme) => ({
   supportBtnsBoldText: {
     fontWeight: 'bold',
   },
-  socialMediaShareTitle: {
+  nextReleaseTitle: {
     marginTop: 10,
+    fontSize: 12,
+    fontWeight: 400,
+  },
+  socialMediaShareTitle: {
+    marginTop: 20,
     fontSize: 11,
     fontWeight: 500,
   },

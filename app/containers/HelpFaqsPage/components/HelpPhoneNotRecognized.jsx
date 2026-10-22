@@ -187,7 +187,7 @@ class HelpPhoneNotRecognized extends PureComponent {
             <TouchAppIcon />
           </ListItemIcon>
           <ListItemText
-            primary={`Tap on the "Allow" button, if you see the "Allow access to the device data" pop up`}
+            primary={`Tap on the "Allow" button if you see the "Allow access to the device data" pop-up`}
             secondary={
               <img
                 src={imgsrc(`help/allow-data-access.png`)}
@@ -265,9 +265,9 @@ class HelpPhoneNotRecognized extends PureComponent {
             <>
               <Typography component="p" variant="body2">
                 <strong>{APP_NAME}</strong> was a project that I started to
-                solve a problem that was so personal to me. But I always knew,
-                that there&apos;s a community, whose facing the same problem as
-                I did.
+                solve a problem that was so personal to me. But I always knew
+                that there&apos;s a community that&apos;s facing the same
+                problem as I did.
               </Typography>
               <Typography component="p" variant="body2" paragraph>
                 I wasn&apos;t wrong, I guess. Now, we are a strong community
@@ -307,8 +307,8 @@ class HelpPhoneNotRecognized extends PureComponent {
                 !
               </Typography>
               <Typography component="p" variant="body2" paragraph>
-                If you&apos;d like to support my work or buy me up a cup of
-                coffee, you can contribute via&nbsp;Paypal:&nbsp;
+                If you&apos;d like to support my work or buy me a cup of coffee,
+                you can contribute via&nbsp;Paypal:&nbsp;
                 <a
                   onClick={(events) => {
                     openExternalUrl(SUPPORT_PAYPAL_URL, events);
@@ -334,11 +334,11 @@ class HelpPhoneNotRecognized extends PureComponent {
 
           {isKalamModeDisabled && (
             <Accordion className={styles.expansionRoot}>
-              {/* <----- Kalam Mode is disabed -----> */}
+              {/* <----- Kalam Mode is disabled -----> */}
 
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography className={styles.heading}>
-                  {`Upgrade you mac's OS version for better app experience`}
+                  {`Upgrade your Mac's OS version for better app experience`}
                 </Typography>
               </AccordionSummary>
               <AccordionDetails>
@@ -348,7 +348,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                       <SystemUpdate />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`We have now officially retired the support for '${MTP_MODE.kalam}' Kernel on 'macOS 10.13' (OS X El High Sierra) and lower. Only the '${MTP_MODE.legacy}' MTP mode will continue working on these outdated machines.`}
+                      primary={`We have now officially retired support for the '${MTP_MODE.kalam}' Kernel on 'macOS 10.13' (OS X High Sierra) and lower. Only the '${MTP_MODE.legacy}' MTP mode will continue working on these outdated machines.`}
                     />
                   </ListItem>
 
@@ -357,7 +357,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                       <SystemUpdate />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`Only the latest 3 versions of macOS will receive the '${MTP_MODE.kalam}' Kernel updates, which includes new devices support, fixes, stability improvements`}
+                      primary={`Only the latest 3 versions of macOS will receive the '${MTP_MODE.kalam}' Kernel updates, which include support for new devices, fixes, and stability improvements`}
                     />
                   </ListItem>
                 </List>
@@ -380,13 +380,13 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <CloseIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`Quit Google drive, Android File Transfer, Dropbox, OneDrive, Preview (for macOS ventura) or any other app that might be reading USB`}
+                    primary={`Quit Google Drive, Android File Transfer, Dropbox, OneDrive, Preview (for macOS Ventura or newer) or any other app that might be reading USB`}
                     secondary={
                       <span>
                         {`Uninstall 'Android File Transfer' by Google if it
-                              keeps popping up everytime you connect your
+                              keeps popping up every time you connect your
                               Android device. The most recent versions of Google
-                              drive and Dropbox are known to interfere with ${APP_NAME}. Completely quiting these apps may fix
+                              Drive and Dropbox are known to interfere with ${APP_NAME}. Completely quitting these apps may fix
                               this issue. `}
                         <a
                           onClick={(events) => {
@@ -418,11 +418,11 @@ class HelpPhoneNotRecognized extends PureComponent {
             </AccordionDetails>
           </Accordion>
 
-          {/* <----- Google drive is interfering with OpenMTP-----> */}
+          {/* <----- Google Drive is interfering with OpenMTP-----> */}
           <Accordion className={styles.expansionRoot}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography className={styles.heading}>
-                {`I have Google drive installed on my ${
+                {`I have Google Drive installed on my ${
                   DEVICES_LABEL[DEVICE_TYPE.local]
                 }`}
               </Typography>
@@ -435,7 +435,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <DeleteIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`The most recent versions of Google drive is known to interfere with ${APP_NAME}. Simply quiting Google drive may fix this issue`}
+                    primary={`The most recent versions of Google Drive are known to interfere with ${APP_NAME}. Simply quitting Google Drive may fix this issue`}
                     secondary={
                       <img
                         src={imgsrc(`help/google-drive-not-connecting.png`)}
@@ -468,7 +468,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <DeleteIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`The most recent versions of Dropbox is known to interfere with ${APP_NAME}. Simply quiting Dropbox may fix this issue`}
+                    primary={`The most recent versions of Dropbox are known to interfere with ${APP_NAME}. Simply quitting Dropbox may fix this issue`}
                   />
                 </ListItem>
 
@@ -492,14 +492,14 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <DeleteIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Uninstall Samsung SmartSwitch, if installed"
+                    primary="Uninstall Samsung Smart Switch if installed"
                     secondary={
                       <a
                         onClick={(events) => {
                           openExternalUrl(DELETE_KEIS_SMARTSWITCH_URL, events);
                         }}
                       >
-                        How to remove Samsung SmartSwitch and drivers from your
+                        How to remove Samsung Smart Switch and drivers from your
                         MacBook
                       </a>
                     }
@@ -556,7 +556,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <TouchAppIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`Tap on the "Allow" button, if you see the "Allow access to the device data" pop up`}
+                    primary={`Tap on the "Allow" button if you see the "Allow access to the device data" pop-up`}
                     secondary={
                       <img
                         src={imgsrc(`help/allow-data-access.png`)}
@@ -571,7 +571,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <FiberManualRecordIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`If you don't see the "Allow access to the device data" pop up then reconnect your ${deviceLabel.toLowerCase()}`}
+                    primary={`If you don't see the "Allow access to the device data" pop-up, then reconnect your ${deviceLabel.toLowerCase()}`}
                     secondary={`Follow the instructions below if your ${deviceLabel.toLowerCase()} is still undetected`}
                   />
                 </ListItem>
@@ -581,7 +581,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <FiberManualRecordIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`If you are prompted to "Allow access to the device data" multiple times then reconnect your ${deviceLabel.toLowerCase()} and try again`}
+                    primary={`If you are prompted to "Allow access to the device data" multiple times, then reconnect your ${deviceLabel.toLowerCase()} and try again`}
                   />
                 </ListItem>
               </List>
@@ -648,11 +648,11 @@ class HelpPhoneNotRecognized extends PureComponent {
             </AccordionDetails>
           </Accordion>
 
-          {/* <----- phone gets disconnected everytime screen goes into sleep -----> */}
+          {/* <----- phone gets disconnected every time screen goes to sleep -----> */}
           <Accordion className={styles.expansionRoot}>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography className={styles.heading}>
-                {`My ${deviceLabel.toLowerCase()} gets disconnected everytime the display goes into sleep`}
+                {`My ${deviceLabel.toLowerCase()} gets disconnected every time the display goes to sleep`}
               </Typography>
             </AccordionSummary>
 
@@ -663,7 +663,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <FiberManualRecordIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`In a very rare case your ${deviceLabel.toLowerCase()} may get disconnected when your display goes into sleep. This may disrupt any active file transfers`}
+                    primary={`In a very rare case your ${deviceLabel.toLowerCase()} may get disconnected when your display goes to sleep. This may disrupt any active file transfers`}
                   />
                 </ListItem>
 
@@ -679,7 +679,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <RadioButtonCheckedIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`Open ${deviceLabel.toLowerCase()}'s Settings > Display > Sleep and set it as 30 minutes or whatever is the highest`}
+                    primary={`Open ${deviceLabel.toLowerCase()}'s Settings > Display > Sleep and set it to 30 minutes or whatever the highest setting is`}
                     secondary={
                       <img
                         src={imgsrc(`help/sleep-setting.jpg`)}
@@ -732,14 +732,14 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <DeleteIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary="Uninstall Samsung SmartSwitch, if installed"
+                    primary="Uninstall Samsung Smart Switch if installed"
                     secondary={
                       <a
                         onClick={(events) => {
                           openExternalUrl(DELETE_KEIS_SMARTSWITCH_URL, events);
                         }}
                       >
-                        How to remove Samsung SmartSwitch and drivers from your
+                        How to remove Samsung Smart Switch and drivers from your
                         MacBook
                       </a>
                     }
@@ -785,7 +785,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <ThumbUpIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`Tap on the "Ok" button, if you see a "${APP_NAME} would like to access files in your..." pop up while trying to open a folder`}
+                    primary={`Tap on the "OK" button if you see a "${APP_NAME} would like to access files in your..." pop-up while trying to open a folder`}
                     secondary={
                       <img
                         src={imgsrc(`help/macos-directory-access.jpg`)}
@@ -800,7 +800,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <FiberManualRecordIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`If you keep getting the "${localErrorDictionary.noPerm}" error then you may need to give access to these folders by going to "Security and Privacy" in "System Preferences"`}
+                    primary={`If you keep getting the "${localErrorDictionary.noPerm}" error, then you may need to give access to these folders by going to "Security and Privacy" in "System Preferences"`}
                   />
                 </ListItem>
                 <ListItem>
@@ -818,7 +818,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <ListAltIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`In the left hand side pane find the "Files and Folders" option, select it. In the right hand side pane find "${APP_NAME}"`}
+                    primary={`In the left-hand side pane, find the "Files and Folders" option, select it. In the right-hand side pane, find "${APP_NAME}"`}
                   />
                 </ListItem>
 
@@ -866,7 +866,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <FiberManualRecordIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`If you still keep getting the "${localErrorDictionary.noPerm}" error then you may grant "Full Disk Access" by going to "Security and Privacy" in "System Preferences"`}
+                    primary={`If you still keep getting the "${localErrorDictionary.noPerm}" error, then you may grant "Full Disk Access" by going to "Security and Privacy" in "System Preferences"`}
                   />
                 </ListItem>
                 <ListItem>
@@ -884,7 +884,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <ListAltIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`In the left hand side pane find the "Full Disk Access" option, select it. In the right hand side pane find "${APP_NAME}"`}
+                    primary={`In the left-hand side pane, find the "Full Disk Access" option, select it. In the right-hand side pane, find "${APP_NAME}"`}
                     secondary={
                       <img
                         src={imgsrc(`help/full-disk-access.png`)}
@@ -900,7 +900,7 @@ class HelpPhoneNotRecognized extends PureComponent {
                     <CheckIcon />
                   </ListItemIcon>
                   <ListItemText
-                    primary={`If you didn't find ${APP_NAME} in the list, then tap on the "+" button and select "${APP_NAME}" by navigating to the "Application" folder`}
+                    primary={`If you don't find ${APP_NAME} in the list, then tap on the "+" button and select "${APP_NAME}" by navigating to the "Applications" folder`}
                     secondary={
                       <img
                         src={imgsrc(`help/full-disk-access-file-picker.jpeg`)}

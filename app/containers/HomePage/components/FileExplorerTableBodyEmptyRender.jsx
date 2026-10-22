@@ -140,13 +140,13 @@ class FileExplorerTableBodyEmptyRender extends PureComponent {
                           <CloseIcon />
                         </ListItemIcon>
                         <ListItemText
-                          primary="Quit Google drive, Android File Transfer, Dropbox, OneDrive, Preview (for macOS ventura) or any other app that might be reading USB"
+                          primary="Quit Google Drive, Android File Transfer, Dropbox, OneDrive, Preview (for macOS Ventura or newer) or any other app that might be reading USB"
                           secondary={
                             <span>
                               {`Uninstall 'Android File Transfer' by Google if it
-                              keeps popping up everytime you connect your
+                              keeps popping up every time you connect your
                               Android device. The most recent versions of Google
-                              drive and Dropbox are known to interfere with ${APP_NAME}. Completely quiting these apps may fix
+                              Drive and Dropbox are known to interfere with ${APP_NAME}. Completely quitting these apps may fix
                               this issue. `}
                               <a
                                 onClick={(events) => {
@@ -211,7 +211,7 @@ class FileExplorerTableBodyEmptyRender extends PureComponent {
                           <PermDeviceInformationIcon />
                         </ListItemIcon>
                         <ListItemText
-                          primary="If you are trying to connect a SAMSUNG device then accept the 'Allow access to device data' confirmation pop up in your phone"
+                          primary="If you are trying to connect a SAMSUNG device then accept the 'Allow access to device data' confirmation pop-up in your phone"
                           secondary="Tap on the 'Refresh' button again. Reconnect your phone and repeat the above steps if it doesn't help"
                         />
                       </ListItem>

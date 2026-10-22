@@ -1,4 +1,5 @@
 ### Initial setup
+
 ```shell
 #install node 16 or above
 npm -g i nvm
@@ -7,7 +8,7 @@ npm -g i nvm
 nvm use 16
 
 #install zx globally
-npm -g i zx
+npm install -g --allow-scripts=zx zx@5.0.0
 ```
 
 ```shell script
@@ -28,7 +29,6 @@ export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
 source ~/.zshrc
 ```
 
-
 ### Build
 
 - Add the required changes to the kalam kernel (./openmtp/ffi/kalam/native)
@@ -39,6 +39,7 @@ go get -u
 ```
 
 - Upgrade a go package
+
 ```shell
 cd ffi/kalam/native
 
@@ -54,8 +55,6 @@ cd </path/to/openmtp/>
 zx ./ffi/kalam/native/scripts/build.mjs
 ```
 
-
-
 **Troubleshooting**
 
 - If you keep getting `fatal error: 'stdlib.h' file not found xcode`, then:
@@ -69,10 +68,7 @@ export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
 source ~/.zshrc
 ```
 
-
-
 - In case of permission error with sentry follow this url: https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally#manually-change-npms-default-directory
-
 
 # Do not follow the instructions below. These are old commands are they are maintained just for the sake of documentation
 
@@ -88,6 +84,7 @@ source ~/.zshrc
 - Example commands to build the kalam go binaries:
 
 ##### Examples:
+
 ```shell
 (
         cd ./ffi/kalam/native && CGO_ENABLED=1 \
@@ -112,11 +109,12 @@ source ~/.zshrc
     )
 ```
 
-
 ## Do not follow the sections below anymore. These commands are deprecated
+
 ### libusb otool commands:
 
 Build:
+
 ```shell
 brew install libusb
 brew info libusb

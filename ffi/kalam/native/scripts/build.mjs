@@ -319,3 +319,9 @@ for await (const [, bottle] of Object.entries(chosenBottlesForBuilding)) {
         -o ${bottlePath.kalamDebugReportInBuildDir} kalam_debug_report/*.go
         )`;
 }
+
+console.warn(
+  orangeChalk(
+    `\nBuilding arm64 for macOS 26 Tahoe and newer? Use the separate script instead, run from the project root:\n\n  zx ./ffi/kalam/native/scripts/build-arm-seg5.mjs\n(the dlopen crash itself only hits macOS 27 Golden Gate and newer, but Tahoe builds with the same fixed binary so it's already covered ahead of that upgrade)\n`
+  )
+);

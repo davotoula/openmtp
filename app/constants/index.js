@@ -27,6 +27,12 @@ export const NODE_MAC_PERMISSIONS_MIN_OS = `11.0.0`;
 
 export const KALAM_MODE_MIN_MACOS_VERSION = `>=10.14`;
 
+// arm64 kalam.dylib built by an older Go toolchain fails to dlopen() on
+// macOS 27 (Golden Gate) and newer (chained-fixups seg_count crash). Tahoe
+// (26) doesn't hit this crash itself, but is included in this range so
+// Tahoe users are already on the fixed binary before they upgrade further.
+export const KALAM_SEG5_MACOS_VERSION_RANGE = `>=26`;
+
 export const DEVICES_DEFAULT_PATH = {
   [DEVICE_TYPE.mtp]: '/',
   [DEVICE_TYPE.local]: PATHS.homeDir,

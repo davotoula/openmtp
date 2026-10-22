@@ -16,14 +16,14 @@ const config = {
     allowDevelopmentEnvironment: true,
   },
   prod: {
-    reportToSenty: true,
+    reportToSenty: false,
     enableGoogleAnalytics: true,
     enableMixpanelAnalytics: true,
     disableReactWarnings: false,
     allowDevelopmentEnvironment: false,
   },
   debug: {
-    reportToSenty: true,
+    reportToSenty: false,
     enableGoogleAnalytics: true,
     enableMixPanelAnalytics: true,
     disableReactWarnings: false,
