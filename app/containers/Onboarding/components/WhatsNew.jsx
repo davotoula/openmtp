@@ -7,7 +7,6 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import SystemUpdate from '@material-ui/icons/SystemUpdate';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import NewReleasesIcon from '@material-ui/icons/NewReleases';
 import { styles } from '../styles/WhatsNew';
 import { APP_NAME, APP_VERSION } from '../../../constants/meta';
 import { isKalamModeSupported } from '../../../helpers/binaries';
@@ -38,16 +37,6 @@ class WhatsNew extends PureComponent {
             <ListItemText
               primary="Added support for macOS 27 Golden Gate"
               secondary="Fixes a crash on launch on macOS 27 Golden Gate"
-            />
-          </ListItem>
-
-          <ListItem>
-            <ListItemIcon>
-              <NewReleasesIcon htmlColor="#ff9800" />
-            </ListItemIcon>
-            <ListItemText
-              primary={`The next generation of ${APP_NAME} is on its way`}
-              secondary="A major upgrade with new features, and big improvements to overall stability and performance is in the works and coming soon. Stay tuned, thanks for all the support!"
             />
           </ListItem>
 
