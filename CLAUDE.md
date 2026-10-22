@@ -6,7 +6,7 @@ OpenMTP is a **macOS-only** Electron 18 + React 17 application for transferring 
 
 Tech stack: Electron 18, React 17, Redux (+ redux-thunk), Material-UI v4, Webpack 5, Babel, ESLint (Airbnb + Prettier), SCSS.
 
-Package manager: **yarn only** (not npm). Node 20 required.
+Package manager: **yarn only** (not npm). Node 22 required (`.node-version`).
 
 ---
 
