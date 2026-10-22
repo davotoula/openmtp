@@ -16,7 +16,12 @@ const {
   bugs,
 } = pkginfo;
 
-export const APP_BUNDLE_ID = 'io.ganeshrvel.openmtp';
+export const APP_BUNDLE_ID = 'com.davotoula.openmtp-resume';
+
+// The bundle ID this fork inherited from upstream and shipped with up to
+// v3.3.0-resume-v1.4. Boot migrates the settings file from its profile
+// directory once.
+export const UPSTREAM_APP_BUNDLE_ID = 'io.ganeshrvel.openmtp';
 
 export const APP_NAME = `${productName}`;
 

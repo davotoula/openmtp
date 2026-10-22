@@ -18,7 +18,7 @@ A clear and concise description of what the bug is.
 Include if relevant,
 1. Open your Terminal and run the following code:
 ```shell
-zip -r -X ~/Desktop/OpenMTP-log.zip "$HOME/Library/Application Support/io.ganeshrvel.openmtp/logs/"
+zip -r -X ~/Desktop/OpenMTP-log.zip "$HOME/Library/Application Support/com.davotoula.openmtp-resume/logs/"
 ```
 2. Attach the file *OpenMTP-log.zip* found in your Desktop folder here.
 

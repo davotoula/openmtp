@@ -5,7 +5,7 @@
  * Note: Don't import log helper file from utils here
  */
 
-import { readdirSync } from 'fs';
+import { copyFileSync, readdirSync } from 'fs';
 import { PATHS } from '../constants/paths';
 import {
   fileExistsSync,
@@ -17,7 +17,8 @@ import { dateNow, daysDiff } from '../utils/date';
 import { LOG_FILE_ROTATION_CLEANUP_THRESHOLD } from '../constants';
 import { baseName } from '../utils/files';
 
-const { logFile, settingsFile, logDir, prevProfileDir } = PATHS;
+const { logFile, settingsFile, logDir, prevProfileDir, upstreamSettingsFile } =
+  PATHS;
 const logFileRotationCleanUpThreshold = LOG_FILE_ROTATION_CLEANUP_THRESHOLD;
 
 export default class Boot {
@@ -36,6 +37,8 @@ export default class Boot {
           await this.createDir(item);
         }
       }
+
+      this.migrateUpstreamSettings();
 
       if (!this.verifyFile(this.settingsFile)) {
         await this.createFile(this.settingsFile);
@@ -110,6 +113,22 @@ export default class Boot {
   async createDir(newFolderPath) {
     try {
       await createDirSync(newFolderPath);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // carry the settings over from the profile directory this fork used under
+  // upstream's bundle ID, but only before a settings file of its own exists.
+  // copied, not moved: upstream OpenMTP may still be using that directory.
+  migrateUpstreamSettings() {
+    try {
+      if (
+        !this.verifyFile(this.settingsFile) &&
+        this.verifyFile(upstreamSettingsFile)
+      ) {
+        copyFileSync(upstreamSettingsFile, this.settingsFile);
+      }
     } catch (e) {
       console.error(e);
     }

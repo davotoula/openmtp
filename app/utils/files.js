@@ -4,16 +4,16 @@ import { APP_BUNDLE_ID } from '../constants/meta';
 
 const homeDir = homedirOs();
 
-export const getAppDataPath = () => {
+export const getAppDataPath = (bundleId = APP_BUNDLE_ID) => {
   switch (process.platform) {
     case 'darwin':
-      return join(homeDir, 'Library', 'Application Support', APP_BUNDLE_ID);
+      return join(homeDir, 'Library', 'Application Support', bundleId);
 
     case 'win32':
-      return join(process.env.APPDATA, APP_BUNDLE_ID);
+      return join(process.env.APPDATA, bundleId);
 
     case 'linux':
-      return join(homeDir, APP_BUNDLE_ID);
+      return join(homeDir, bundleId);
 
     default: {
       process.exit(1);

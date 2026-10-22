@@ -10,7 +10,7 @@ import { rootPath as root } from 'electron-root-path';
 import { isPackaged } from '../utils/isPackaged';
 import { IS_DEV } from './env';
 import { yearMonthNow } from '../utils/date';
-import { APP_NAME } from './meta';
+import { APP_NAME, UPSTREAM_APP_BUNDLE_ID } from './meta';
 import { getAppDataPath } from '../utils/files';
 
 const appPath = join(root, `./app`);
@@ -20,6 +20,11 @@ const profileDir = getAppDataPath();
 
 // old generation [profileDir] path. Used until OpenMTP < v3.0.0
 const prevProfileDir = join(homeDir, `./.io.ganeshrvel`);
+
+// [profileDir] this fork used while it still had upstream's bundle ID. Shared
+// with upstream OpenMTP, so it is only ever read from, never removed.
+const upstreamProfileDir = getAppDataPath(UPSTREAM_APP_BUNDLE_ID);
+const upstreamSettingsFile = join(upstreamProfileDir, `./settings.json`);
 
 const rotateFile = yearMonthNow({});
 const logFileName = IS_DEV
@@ -45,6 +50,7 @@ export const PATHS = {
   identifierFile: resolve(identifierFile),
   devAppUpdateFile: resolve(devAppUpdateFile),
   prevProfileDir: resolve(prevProfileDir),
+  upstreamSettingsFile: resolve(upstreamSettingsFile),
   desktopDir: join(homeDir, `/Desktop`),
   documentsDir: join(homeDir, `/Documents`),
   downloadsDir: join(homeDir, `/Downloads`),

@@ -53,7 +53,7 @@ module.exports = () => {
 
   return {
     productName: 'OpenMTP-resume',
-    appId: 'io.ganeshrvel.openmtp',
+    appId: 'com.davotoula.openmtp-resume',
     // This fork has no Apple Developer ID, so electron-builder finds no signing
     // identity and would abort the build here. AfterPack applies an ad-hoc
     // signature instead; re-enable this if a real certificate is ever configured.
