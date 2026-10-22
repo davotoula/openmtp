@@ -28,8 +28,16 @@ jobs:
           node-version-file: .node-version
           cache: yarn
 
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      # Dependency lifecycle scripts are disabled: none of them is needed to
+      # build (they download the Electron runtime and sentry-cli, install git
+      # hooks, verify koffi's bundled N-API prebuild, or print attribution
+      # notices). The one step that is needed -- compiling the native modules
+      # bundled into the app against Electron's headers -- runs explicitly below.
+      - name: Install dependencies (lifecycle scripts disabled)
+        run: yarn install --frozen-lockfile --ignore-scripts
+
+      - name: Build native modules for Electron
+        run: yarn electron-builder install-app-deps
 
       - name: Lint styles
         run: yarn lint-styles
