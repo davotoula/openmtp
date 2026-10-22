@@ -42,6 +42,15 @@ module.exports = () => {
     ];
   };
 
+  // Mirrors hasSigningIdentity() in internals/scripts/AfterPack.js -- keep the
+  // two in sync, or the app ends up signed twice or not at all.
+  const hasSigningIdentity = Boolean(
+    process.env.CSC_LINK ||
+      process.env.CSC_NAME ||
+      process.env.CSC_KEY_PASSWORD ||
+      process.env.APPLEID
+  );
+
   return {
     productName: 'OpenMTP-resume',
     appId: 'io.ganeshrvel.openmtp',
@@ -79,6 +88,11 @@ module.exports = () => {
       type: 'distribution',
       icon: 'build/icon.icns',
       category: 'public.app-category.productivity',
+      // forceCodeSigning: false doesn't stop electron-builder from auto-discovering
+      // whatever identity is in the keychain -- e.g. an "Apple Development" cert,
+      // which can't sign for distribution and makes codesign fail. Unless a real
+      // identity is configured, skip signing here and let AfterPack ad-hoc sign.
+      ...(hasSigningIdentity ? {} : { identity: null }),
       hardenedRuntime: true,
       gatekeeperAssess: false,
       entitlements: './build/entitlements.mac.plist',
