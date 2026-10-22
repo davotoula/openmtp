@@ -18,33 +18,30 @@ Resume usage:
 
 ## Installing this fork
 
-These builds are **ad-hoc signed, not notarized** — this fork is a temporary stopgap
-while upstream prepares a rewrite, and notarizing would require a paid Apple Developer
-account. macOS therefore blocks the app on first launch.
+Download the DMG from the [latest release](https://github.com/davotoula/openmtp/releases/latest),
+open it and drag **OpenMTP-resume** into `/Applications`.
 
-**1. Move the app to `/Applications` first.** Do not run it from `Downloads`. macOS
-applies "app translocation" to quarantined apps launched from the Downloads folder — it
-silently runs them from a randomised read-only location, which usually shows up as the
-icon bouncing once and the app never opening.
+From **v3.3.0-resume-v1.5** onwards, builds are signed with a Developer ID and notarized by
+Apple. On first launch macOS shows its standard _"OpenMTP-resume" is an app downloaded from
+the Internet. Are you sure you want to open it?_ prompt — click **Open**. It can appear
+behind other windows; until it is answered the app looks like it is hanging. After that,
+macOS asks once for access to folders such as Documents and Downloads.
 
-**2. Then open it once via:**
+Requires macOS 11 or newer on Apple Silicon (arm64).
 
-**System Settings → Privacy & Security → scroll to "OpenMTP-resume was blocked" → Open Anyway**
+### Older releases (v1.4 and earlier)
 
-macOS remembers the choice, so this is only needed on first launch and after each update.
-Right-click → Open no longer works for this on macOS 15 (Sequoia) and newer.
-
-If you prefer the terminal, this achieves the same thing in one step (again, only after
-the app has been moved to `/Applications`):
+Those builds were only ad-hoc signed, so macOS blocks them on first launch. Move the app to
+`/Applications` (not `Downloads`), then open it once via
+**System Settings → Privacy & Security → "OpenMTP-resume was blocked" → Open Anyway**,
+or run:
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/OpenMTP-resume.app
 ```
 
-### If the icon just bounces and nothing opens
-
-The app is still quarantined, or it is being run from `Downloads`. Move it to
-`/Applications` and repeat step 2 above.
+If the app hangs on launch or the icon just bounces, it is still quarantined: repeat the step
+above. Better still, install v1.5 or later.
 
 # OpenMTP | Android File Transfer for macOS
 
