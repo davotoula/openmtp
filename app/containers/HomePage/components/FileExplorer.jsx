@@ -3313,14 +3313,16 @@ const mapDispatchToProps = (dispatch, _) =>
             const onCompleted = () => {
               const avgSpeed = arrayAverage(sessionTransferSpeeds);
 
-              analyticsService.sendEvent(EVENT_TYPE.FILE_TRANSFER_COMPLETED, {
-                'Transfer direction': sessionTransferDirection,
-                'Total files': sessionTotalFiles,
-                'Average transfer speed': `${avgSpeed} MB/s`,
-                'Elapsed time': sessionElapsedTime,
-                'Is files preprocessing enabled':
-                  filesPreprocessingBeforeTransfer[sessionTransferDirection],
-              });
+              analyticsService
+                .sendEvent(EVENT_TYPE.FILE_TRANSFER_COMPLETED, {
+                  'Transfer direction': sessionTransferDirection,
+                  'Total files': sessionTotalFiles,
+                  'Average transfer speed': `${avgSpeed} MB/s`,
+                  'Elapsed time': sessionElapsedTime,
+                  'Is files preprocessing enabled':
+                    filesPreprocessingBeforeTransfer[sessionTransferDirection],
+                })
+                .catch((e) => log.error(e));
 
               if (onSingleFileComplete) {
                 onSingleFileComplete({
