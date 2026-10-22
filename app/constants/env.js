@@ -17,8 +17,11 @@ const config = {
   },
   prod: {
     reportToSenty: false,
-    enableGoogleAnalytics: true,
-    enableMixpanelAnalytics: true,
+    // Off in this fork: the service keys belong to upstream's analytics
+    // projects, and the stored enableAnalytics setting can't be relied on to
+    // turn it off for users who already ran a build with it defaulting to true.
+    enableGoogleAnalytics: false,
+    enableMixpanelAnalytics: false,
     disableReactWarnings: false,
     allowDevelopmentEnvironment: false,
   },
