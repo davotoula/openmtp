@@ -31,6 +31,8 @@ import {
 const SKIP = {
   '@electron/remote': 'needs a live Electron main/renderer process',
   'electron-debug': 'needs the electron module (dev-only helper)',
+  'electron-ga':
+    'requires the electron npm package at load time, which has no binary on CI (ELECTRON_SKIP_BINARY_DOWNLOAD)',
   milligram: 'CSS-only package, no JS entry',
   'normalize.css': 'CSS-only package, no JS entry',
   'run-electron': 'CLI launcher for Electron, not a library',
