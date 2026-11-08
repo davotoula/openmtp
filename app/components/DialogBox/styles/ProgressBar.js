@@ -19,6 +19,18 @@ export const styles = (theme) => ({
     marginTop: 10,
     fontSize: 14,
   },
+  // "Progress: [sent] / [total] [details]" with fixed width size columns, so that the sizes and the details
+  // after them stay in place as the sizes change, and line up across progress rows
+  progressColumns: {
+    display: 'grid',
+    // 11ch fits the longest size, "1023.99 MB"
+    gridTemplateColumns: 'max-content 11ch max-content 11ch 1fr',
+    columnGap: 6,
+    whiteSpace: 'nowrap',
+  },
+  sizeColumn: {
+    textAlign: 'right',
+  },
   dialogTitleInnerWrapper: {
     alignItems: `center`,
   },

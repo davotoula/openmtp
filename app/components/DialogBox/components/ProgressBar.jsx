@@ -89,9 +89,28 @@ class ProgressBar extends PureComponent {
                 value={a.percentage}
               />
 
-              <DialogContentText className={styles.dialogContentTextBottom}>
-                {a.bodyText2 ?? ''}
-              </DialogContentText>
+              {a.progressColumns ? (
+                <DialogContentText
+                  className={classnames(
+                    styles.dialogContentTextBottom,
+                    styles.progressColumns
+                  )}
+                >
+                  <span>Progress:</span>
+                  <span className={styles.sizeColumn}>
+                    {a.progressColumns.sent}
+                  </span>
+                  <span>/</span>
+                  <span className={styles.sizeColumn}>
+                    {a.progressColumns.total}
+                  </span>
+                  <span>{a.progressColumns.details}</span>
+                </DialogContentText>
+              ) : (
+                <DialogContentText className={styles.dialogContentTextBottom}>
+                  {a.bodyText2 ?? ''}
+                </DialogContentText>
+              )}
             </Fragment>
           );
         })}

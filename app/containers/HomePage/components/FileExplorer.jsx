@@ -80,6 +80,7 @@ import {
   isInt,
   isNumber,
   niceBytes,
+  niceBytesProgress,
   removeArrayDuplicates,
   springTruncate,
   undefinedOrNull,
@@ -197,8 +198,9 @@ const formatElapsedTime = (ms) => {
   return parts.join(' ');
 };
 
-// sizes in the transfer progress dialog keep a fixed number of decimals, so the text doesn't jump as they change
-const progressBytes = (bytes) => niceBytes(bytes, 2, true);
+// padded with figure spaces (as wide as a digit), so that the text after the percentage doesn't shift from 9% to 10%
+const formatProgressPercent = (percentage) =>
+  `${Math.floor(percentage)}%`.padStart(4, ' ');
 
 const formatAvgSpeed = ({ avgSpeed, mtpMode }) => {
   if (!avgSpeed) {
@@ -3175,7 +3177,6 @@ const mapDispatchToProps = (dispatch, _) =>
             }) => {
               let windowProgressBar = 0;
               let bodyText1 = 0;
-              let progressText = 0;
 
               let progressInfo = [];
 
@@ -3191,22 +3192,24 @@ const mapDispatchToProps = (dispatch, _) =>
 
               /// file transfer progress on legacy mode
               if (mtpMode === MTP_MODE.legacy) {
-                bodyText1 = `${Math.floor(activeFileProgress)}% complete of "${
+                bodyText1 = `${formatProgressPercent(
+                  activeFileProgress
+                )} complete of "${
                   springTruncate(currentFile, 45).truncatedText
                 }"`;
-                progressText = `${progressBytes(
-                  activeFileSizeSent
-                )} / ${progressBytes(activeFileSize)}`;
                 windowProgressBar = activeFileProgress / 100;
 
                 sessionTransferSpeeds.push(parseFloat(speed) / 1000 / 1000);
 
-                const _speed = speed ? `${progressBytes(speed)}` : `--`;
+                const _speed = speed ? `${niceBytes(speed, 2, true)}/s` : `--`;
 
                 progressInfo = [
                   {
                     bodyText1,
-                    bodyText2: `Elapsed: ${elapsedTime} | Progress: ${progressText} @ ${_speed}/sec`,
+                    progressColumns: {
+                      ...niceBytesProgress(activeFileSizeSent, activeFileSize),
+                      details: `@ ${_speed} | Elapsed: ${elapsedTime}`,
+                    },
                     variant: `determinate`,
                     percentage: activeFileProgress,
                   },
@@ -3218,25 +3221,27 @@ const mapDispatchToProps = (dispatch, _) =>
                 sessionAverageSpeed = averageSpeed;
 
                 // active file progress
-                bodyText1 = `${Math.floor(activeFileProgress)}% complete of "${
+                bodyText1 = `${formatProgressPercent(
+                  activeFileProgress
+                )} complete of "${
                   springTruncate(currentFile, 45).truncatedText
                 }"`;
-                progressText = `${progressBytes(
-                  activeFileSizeSent
-                )} / ${progressBytes(activeFileSize)}`;
-                const elapsedTimeText = `Elapsed: ${elapsedTime} | `;
+                const elapsedTimeText = `Elapsed: ${elapsedTime}`;
 
                 progressInfo = [
                   {
                     bodyText1,
-                    bodyText2: `${
-                      !filesPreprocessingBeforeTransfer[direction]
-                        ? elapsedTimeText
-                        : ''
-                    }Progress: ${progressText} @ ${formatAvgSpeed({
-                      avgSpeed: averageSpeed,
-                      mtpMode,
-                    })}`,
+                    progressColumns: {
+                      ...niceBytesProgress(activeFileSizeSent, activeFileSize),
+                      details: `@ ${formatAvgSpeed({
+                        avgSpeed: averageSpeed,
+                        mtpMode,
+                      })}${
+                        !filesPreprocessingBeforeTransfer[direction]
+                          ? ` | ${elapsedTimeText}`
+                          : ''
+                      }`,
+                    },
                     variant: `determinate`,
                     percentage: activeFileProgress,
                   },
@@ -3253,15 +3258,15 @@ const mapDispatchToProps = (dispatch, _) =>
                     'file',
                     totalFiles
                   )} copied | ${Math.floor(totalFileProgress)}% completed`;
-                  const progressText = `${progressBytes(
-                    totalFileSizeSent
-                  )} / ${progressBytes(totalFileSize)}`;
 
                   progressInfo.push({
                     bodyText1,
-                    bodyText2: `${elapsedTimeText}Progress: ${progressText}${
-                      timeLeft ? ` | ${timeLeft} left` : ''
-                    }`,
+                    progressColumns: {
+                      ...niceBytesProgress(totalFileSizeSent, totalFileSize),
+                      details: `${elapsedTimeText}${
+                        timeLeft ? ` | ${timeLeft} left` : ''
+                      }`,
+                    },
                     variant: `determinate`,
                     percentage: totalFileProgress,
                   });

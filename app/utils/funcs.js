@@ -59,6 +59,19 @@ export const inArray = (arr, n) => {
   return arr.includes(n);
 };
 
+const BYTE_UNITS = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+const byteUnitIndex = (bytes) => Math.floor(Math.log(bytes) / Math.log(1024));
+
+const formatBytesInUnit = (bytes, unitIndex, decimals, fixedDecimals) => {
+  const value = (bytes / 1024 ** unitIndex).toFixed(decimals); // eslint-disable-line no-restricted-properties
+
+  // whole bytes never have decimals
+  return `${fixedDecimals && unitIndex > 0 ? value : parseFloat(value)} ${
+    BYTE_UNITS[unitIndex]
+  }`;
+};
+
 /**
  * description - Human readable size, e.g. "781.55 MB"
  *
@@ -73,14 +86,28 @@ export const niceBytes = (a, b, fixedDecimals = false) => {
     return '0 Bytes';
   }
 
-  const c = 1024;
-  const d = b || 2;
-  const e = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const f = Math.floor(Math.log(a) / Math.log(c));
-  const value = (a / c ** f).toFixed(d); // eslint-disable-line no-restricted-properties
+  return formatBytesInUnit(a, byteUnitIndex(a), b || 2, fixedDecimals);
+};
 
-  // whole bytes never have decimals
-  return `${fixedDecimals && f > 0 ? value : parseFloat(value)} ${e[f]}`;
+/**
+ * description - "[sent] / [total]" sizes of a transfer, both in the unit of [total] and with 2 fixed decimals,
+ * so that [sent] doesn't switch units (512.00 KB -> 1.00 MB) while it counts up
+ *
+ * @param sent - bytes sent
+ * @param total - total bytes
+ * @return {{sent: string, total: string}}
+ */
+export const niceBytesProgress = (sent, total) => {
+  if (!total) {
+    return { sent: niceBytes(sent, 2, true), total: niceBytes(total, 2, true) };
+  }
+
+  const unitIndex = byteUnitIndex(total);
+
+  return {
+    sent: formatBytesInUnit(sent, unitIndex, 2, true),
+    total: formatBytesInUnit(total, unitIndex, 2, true),
+  };
 };
 
 export const replaceBulk = (str, findArray, replaceArray) => {
