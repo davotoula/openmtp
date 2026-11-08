@@ -98,7 +98,11 @@ module.exports = () => {
       entitlements: './build/entitlements.mac.plist',
       entitlementsInherit: './build/entitlements.mac.plist',
       extendInfo: {
-        LSMinimumSystemVersion: '10.11.0',
+        // Electron 45's macOS floor, applied one release early (the epic
+        // accepts it). Only arm64 builds ship, so this drops Apple Silicon
+        // Macs still on macOS 11 or 12; without the key electron-builder
+        // inherits Electron's own floor.
+        LSMinimumSystemVersion: '13.0',
         NSDesktopFolderUsageDescription: 'Desktop folder access',
         NSDocumentsFolderUsageDescription: 'Documents folder access',
         NSDownloadsFolderUsageDescription: 'Downloads folder access',
