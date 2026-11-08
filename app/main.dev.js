@@ -106,16 +106,18 @@ async function installExtensions() {
   } = await import('electron-devtools-installer');
 
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-  const extensions = [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS];
+  // installExtension's array form is a sequential chain that rejects at the
+  // first failure; install independently so an unavailable extension costs
+  // only itself.
+  const install = (name, extension) =>
+    installExtension(extension, { forceDownload }).catch((err) =>
+      log.error(err, `main.dev -> installExtensions -> ${name}`)
+    );
 
-  return installExtension(extensions, {
-    forceDownload,
-  }).catch((err) =>
-    log.error(
-      `An extension error occurred: ${err}`,
-      `main.dev -> installExtensions`
-    )
-  );
+  return Promise.all([
+    install('React Developer Tools', REACT_DEVELOPER_TOOLS),
+    install('Redux DevTools', REDUX_DEVTOOLS),
+  ]);
 }
 
 async function createWindow() {
