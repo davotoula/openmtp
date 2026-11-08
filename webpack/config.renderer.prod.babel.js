@@ -79,6 +79,9 @@ export default merge(baseConfig, {
         use: [
           {
             loader: MiniCssExtractPlugin.loader,
+            options: {
+              publicPath: './',
+            },
           },
           {
             loader: 'css-loader',
@@ -123,54 +126,15 @@ export default merge(baseConfig, {
           },
         ],
       },
-      // WOFF Font
+      // Fonts. css-loader references url() assets via `new URL()`, which
+      // webpack 5 always treats as an asset module, so a url-loader rule here
+      // would run as well and the asset would be emitted twice: the real font
+      // under fonts/ and an 80-byte JS stub at the URL the CSS points to.
       {
-        test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            publicPath: './',
-            limit: 10000,
-            mimetype: 'application/font-woff',
-            name: 'fonts/[name].[hash].[ext]',
-          },
-        },
-      },
-      // WOFF2 Font
-      {
-        test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            publicPath: './',
-            limit: 10000,
-            mimetype: 'application/font-woff',
-            name: 'fonts/[name].[hash].[ext]',
-          },
-        },
-      },
-      // TTF Font
-      {
-        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            publicPath: './',
-            limit: 10000,
-            mimetype: 'application/octet-stream',
-            name: 'fonts/[name].[hash].[ext]',
-          },
-        },
-      },
-      // EOT Font
-      {
-        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'file-loader',
-          options: {
-            publicPath: './',
-            name: 'fonts/[name].[hash].[ext]',
-          },
+        test: /\.(woff2?|ttf|eot)(\?v=\d+\.\d+\.\d+)?$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name].[hash][ext]',
         },
       },
       // SVG Font
