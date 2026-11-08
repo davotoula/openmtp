@@ -272,6 +272,7 @@ export const initialState = {
        *    variant,
        *    bodyText1,
        *    bodyText2,
+       *    progressColumns, // optional {sent, total, details}, shown in fixed width columns instead of bodyText2
        *  }]
        */
       values: [],

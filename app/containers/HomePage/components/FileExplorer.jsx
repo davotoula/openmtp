@@ -80,6 +80,7 @@ import {
   isInt,
   isNumber,
   niceBytes,
+  niceBytesProgress,
   removeArrayDuplicates,
   springTruncate,
   undefinedOrNull,
@@ -197,13 +198,17 @@ const formatElapsedTime = (ms) => {
   return parts.join(' ');
 };
 
-const formatAvgSpeed = ({ avgSpeed, mtpMode }) => {
+// padded with figure spaces (as wide as a digit), so that the text after the percentage doesn't shift from 9% to 10%
+const formatProgressPercent = (percentage) =>
+  `${Math.floor(percentage)}%`.padStart(4, ' ');
+
+const formatAvgSpeed = ({ avgSpeed, mtpMode, fixedDecimals = false }) => {
   if (!avgSpeed) {
     return '--';
   }
 
   return mtpMode === MTP_MODE.legacy
-    ? `${niceBytes(avgSpeed * 1000 * 1000)}/s`
+    ? `${niceBytes(avgSpeed * 1000 * 1000, 2, fixedDecimals)}/s`
     : `${avgSpeed.toFixed(2)} MB/s`;
 };
 
@@ -3107,7 +3112,10 @@ const mapDispatchToProps = (dispatch, _) =>
         (_, getState) => {
           const transferStartTime = Date.now();
           let sessionElapsedTime = 0;
+          // legacy mode only reports per-interval speeds, which are averaged at the end;
+          // kalam reports the running average directly
           const sessionTransferSpeeds = [];
+          let sessionAverageSpeed = 0;
           let sessionTotalFiles = 0;
           let sessionTransferDirection;
           let sessionTotalFileSizeSent = 0;
@@ -3115,6 +3123,11 @@ const mapDispatchToProps = (dispatch, _) =>
           try {
             const { mtpMode, filesPreprocessingBeforeTransfer } =
               getState().Settings;
+
+            const getSessionAverageSpeed = () =>
+              mtpMode === MTP_MODE.legacy
+                ? arrayAverage(sessionTransferSpeeds)
+                : sessionAverageSpeed;
 
             const { destinationFolder, storageId, fileTransferClipboard } =
               pasteArgs;
@@ -3150,6 +3163,7 @@ const mapDispatchToProps = (dispatch, _) =>
               elapsedTime,
               timeLeft,
               speed,
+              averageSpeed,
               activeFileProgress,
               currentFile,
               activeFileSize,
@@ -3161,11 +3175,10 @@ const mapDispatchToProps = (dispatch, _) =>
               totalFileProgress,
               direction,
             }) => {
-              let windowProgressBar = 0;
-              let bodyText1 = 0;
-              let progressText = 0;
-
-              let progressInfo = [];
+              const isLegacy = mtpMode === MTP_MODE.legacy;
+              const elapsedTimeText = `Elapsed: ${elapsedTime}`;
+              let windowProgressBar = activeFileProgress / 100;
+              let activeFileDetails;
 
               sessionElapsedTime = elapsedTime;
               sessionTotalFiles = totalFiles;
@@ -3177,80 +3190,68 @@ const mapDispatchToProps = (dispatch, _) =>
                 sessionTotalFileSizeSent = activeFileSizeSent;
               }
 
-              /// file transfer progress on legacy mode
-              if (mtpMode === MTP_MODE.legacy) {
-                bodyText1 = `${Math.floor(activeFileProgress)}% complete of "${
-                  springTruncate(currentFile, 45).truncatedText
-                }"`;
-                progressText = `${niceBytes(activeFileSizeSent)} / ${niceBytes(
-                  activeFileSize
-                )}`;
-                windowProgressBar = activeFileProgress / 100;
+              /// legacy mode reports the latest speed in bytes/s, kalam the running average in MB/s
+              if (isLegacy) {
+                const speedInMBs = Number.parseFloat(speed) / 1000 / 1000;
 
-                sessionTransferSpeeds.push(parseFloat(speed) / 1000 / 1000);
-
-                const _speed = speed ? `${niceBytes(speed)}` : `--`;
-
-                progressInfo = [
-                  {
-                    bodyText1,
-                    bodyText2: `Elapsed: ${elapsedTime} | Progress: ${progressText} @ ${_speed}/sec`,
-                    variant: `determinate`,
-                    percentage: activeFileProgress,
-                  },
-                ];
+                sessionTransferSpeeds.push(speedInMBs);
+                activeFileDetails = `@ ${formatAvgSpeed({
+                  avgSpeed: speedInMBs,
+                  mtpMode,
+                  fixedDecimals: true,
+                })} | ${elapsedTimeText}`;
               } else {
                 checkIf(direction, 'string');
                 checkIf(direction, 'inObjectValues', FILE_TRANSFER_DIRECTION);
 
-                sessionTransferSpeeds.push(parseFloat(speed));
+                sessionAverageSpeed = averageSpeed;
+                activeFileDetails = `@ ${formatAvgSpeed({
+                  avgSpeed: averageSpeed,
+                  mtpMode,
+                })}${
+                  !filesPreprocessingBeforeTransfer[direction]
+                    ? ` | ${elapsedTimeText}`
+                    : ''
+                }`;
+              }
 
-                // active file progress
-                bodyText1 = `${Math.floor(activeFileProgress)}% complete of "${
-                  springTruncate(currentFile, 45).truncatedText
-                }"`;
-                progressText = `${niceBytes(activeFileSizeSent)} / ${niceBytes(
-                  activeFileSize
-                )}`;
-                const elapsedTimeText = `Elapsed: ${elapsedTime} | `;
-
-                progressInfo = [
-                  {
-                    bodyText1,
-                    bodyText2: `${
-                      !filesPreprocessingBeforeTransfer[direction]
-                        ? elapsedTimeText
-                        : ''
-                    }Progress: ${progressText} @ ${speed} MB/sec`,
-                    variant: `determinate`,
-                    percentage: activeFileProgress,
+              // active file progress
+              const progressInfo = [
+                {
+                  bodyText1: `${formatProgressPercent(
+                    activeFileProgress
+                  )} complete of "${
+                    springTruncate(currentFile, 45).truncatedText
+                  }"`,
+                  progressColumns: {
+                    ...niceBytesProgress(activeFileSizeSent, activeFileSize),
+                    details: activeFileDetails,
                   },
-                ];
-                windowProgressBar = activeFileProgress / 100;
+                  variant: `determinate`,
+                  percentage: activeFileProgress,
+                },
+              ];
 
-                /// if preprocessing of file transfer is enabled then show total file transfer information as well
-                if (filesPreprocessingBeforeTransfer[direction]) {
-                  // if preprocessing of file transfer is enabled then [windowProgressBar]
-                  // progress value should be the [totalFileProgress] else [activeFileProgress] will be used
-                  windowProgressBar = totalFileProgress / 100;
+              /// if preprocessing of file transfer is enabled (kalam only) then show total file transfer information as well
+              if (!isLegacy && filesPreprocessingBeforeTransfer[direction]) {
+                // if preprocessing of file transfer is enabled then [windowProgressBar]
+                // progress value should be the [totalFileProgress] else [activeFileProgress] will be used
+                windowProgressBar = totalFileProgress / 100;
 
-                  const bodyText1 = `${filesSent} of ${totalFiles} ${getPluralText(
+                progressInfo.push({
+                  bodyText1: `${filesSent} of ${totalFiles} ${getPluralText(
                     'file',
                     totalFiles
-                  )} copied | ${Math.floor(totalFileProgress)}% completed`;
-                  const progressText = `${niceBytes(
-                    totalFileSizeSent
-                  )} / ${niceBytes(totalFileSize)}`;
-
-                  progressInfo.push({
-                    bodyText1,
-                    bodyText2: `${elapsedTimeText}Progress: ${progressText}${
+                  )} copied | ${Math.floor(totalFileProgress)}% completed`,
+                  progressColumns: {
+                    ...niceBytesProgress(totalFileSizeSent, totalFileSize),
+                    details: `${elapsedTimeText}${
                       timeLeft ? ` | ${timeLeft} left` : ''
                     }`,
-                    variant: `determinate`,
-                    percentage: totalFileProgress,
-                  });
-                }
+                  },
+                  variant: `determinate`,
+                  percentage: totalFileProgress,
+                });
               }
 
               getCurrentWindow().setProgressBar(windowProgressBar);
@@ -3303,7 +3304,7 @@ const mapDispatchToProps = (dispatch, _) =>
                   success: false,
                   sessionStats: {
                     elapsedTime: sessionElapsedTime,
-                    avgSpeed: arrayAverage(sessionTransferSpeeds),
+                    avgSpeed: getSessionAverageSpeed(),
                     totalFileSizeSent: sessionTotalFileSizeSent,
                     totalFilesSent: sessionTotalFiles,
                     mtpMode,
@@ -3314,7 +3315,7 @@ const mapDispatchToProps = (dispatch, _) =>
 
             // on completed callback for file transfer
             const onCompleted = () => {
-              const avgSpeed = arrayAverage(sessionTransferSpeeds);
+              const avgSpeed = getSessionAverageSpeed();
 
               analyticsService
                 .sendEvent(EVENT_TYPE.FILE_TRANSFER_COMPLETED, {

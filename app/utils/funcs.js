@@ -59,17 +59,51 @@ export const inArray = (arr, n) => {
   return arr.includes(n);
 };
 
-export const niceBytes = (a, b) => {
+const BYTE_UNITS = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+
+const byteUnitIndex = (bytes) => Math.floor(Math.log(bytes) / Math.log(1024));
+
+const formatBytesInUnit = (bytes, unitIndex, decimals, fixedDecimals) => {
+  const value = (bytes / 1024 ** unitIndex).toFixed(decimals); // eslint-disable-line no-restricted-properties
+
+  // whole bytes never have decimals
+  return `${
+    fixedDecimals && unitIndex > 0 ? value : Number.parseFloat(value)
+  } ${BYTE_UNITS[unitIndex]}`;
+};
+
+/**
+ * description - Human readable size, e.g. "781.55 MB"
+ *
+ * @param a - size in bytes
+ * @param b - number of decimal places (default: 2)
+ * @param fixedDecimals - keep trailing zeros ("781.50 MB" instead of "781.5 MB"), so that a value which keeps
+ * changing (e.g. transfer progress) keeps the same length
+ * @return {string}
+ */
+export const niceBytes = (a, b, fixedDecimals = false) => {
   if (a === 0) {
     return '0 Bytes';
   }
 
-  const c = 1024;
-  const d = b || 2;
-  const e = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const f = Math.floor(Math.log(a) / Math.log(c));
+  return formatBytesInUnit(a, byteUnitIndex(a), b || 2, fixedDecimals);
+};
 
-  return `${parseFloat((a / c ** f).toFixed(d))} ${e[f]}`; // eslint-disable-line no-restricted-properties
+/**
+ * description - "[sent] / [total]" sizes of a transfer, both in the unit of [total] and with 2 fixed decimals,
+ * so that [sent] doesn't switch units (512.00 KB -> 1.00 MB) while it counts up
+ *
+ * @param sent - bytes sent
+ * @param total - total bytes
+ * @return {{sent: string, total: string}}
+ */
+export const niceBytesProgress = (sent, total) => {
+  const unitIndex = total > 0 ? byteUnitIndex(total) : 0;
+
+  return {
+    sent: formatBytesInUnit(sent, unitIndex, 2, true),
+    total: formatBytesInUnit(total, unitIndex, 2, true),
+  };
 };
 
 export const replaceBulk = (str, findArray, replaceArray) => {
