@@ -68,7 +68,7 @@ export const inArray = (arr, n) => {
  * changing (e.g. transfer progress) keeps the same length
  * @return {string}
  */
-export const niceBytes = (a, b, { fixedDecimals = false } = {}) => {
+export const niceBytes = (a, b, fixedDecimals = false) => {
   if (a === 0) {
     return '0 Bytes';
   }

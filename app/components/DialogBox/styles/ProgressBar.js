@@ -7,16 +7,17 @@ export const styles = (theme) => ({
   dialogFixMultipleProgressPadding: {
     marginTop: 35,
   },
-  // tabular-nums: equal width digits, so that the progress text doesn't shift as the numbers change
+  // equal width digits, so that the progress text doesn't shift as the numbers change
+  progressContent: {
+    fontVariantNumeric: 'tabular-nums',
+  },
   dialogContentTextTop: {
     marginBottom: 10,
     fontSize: 14,
-    fontVariantNumeric: 'tabular-nums',
   },
   dialogContentTextBottom: {
     marginTop: 10,
     fontSize: 14,
-    fontVariantNumeric: 'tabular-nums',
   },
   dialogTitleInnerWrapper: {
     alignItems: `center`,

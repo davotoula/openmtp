@@ -70,7 +70,7 @@ class ProgressBar extends PureComponent {
     const { classes: styles, values, bottomText, children } = this.props;
 
     return (
-      <DialogContent>
+      <DialogContent className={styles.progressContent}>
         {values.map((a, index) => {
           return (
             // eslint-disable-next-line react/no-array-index-key

@@ -198,7 +198,7 @@ const formatElapsedTime = (ms) => {
 };
 
 // sizes in the transfer progress dialog keep a fixed number of decimals, so the text doesn't jump as they change
-const progressBytes = (bytes) => niceBytes(bytes, 2, { fixedDecimals: true });
+const progressBytes = (bytes) => niceBytes(bytes, 2, true);
 
 const formatAvgSpeed = ({ avgSpeed, mtpMode }) => {
   if (!avgSpeed) {
@@ -3110,7 +3110,10 @@ const mapDispatchToProps = (dispatch, _) =>
         (_, getState) => {
           const transferStartTime = Date.now();
           let sessionElapsedTime = 0;
+          // legacy mode only reports per-interval speeds, which are averaged at the end;
+          // kalam reports the running average directly
           const sessionTransferSpeeds = [];
+          let sessionAverageSpeed = 0;
           let sessionTotalFiles = 0;
           let sessionTransferDirection;
           let sessionTotalFileSizeSent = 0;
@@ -3118,6 +3121,11 @@ const mapDispatchToProps = (dispatch, _) =>
           try {
             const { mtpMode, filesPreprocessingBeforeTransfer } =
               getState().Settings;
+
+            const getSessionAverageSpeed = () =>
+              mtpMode === MTP_MODE.legacy
+                ? arrayAverage(sessionTransferSpeeds)
+                : sessionAverageSpeed;
 
             const { destinationFolder, storageId, fileTransferClipboard } =
               pasteArgs;
@@ -3207,7 +3215,7 @@ const mapDispatchToProps = (dispatch, _) =>
                 checkIf(direction, 'string');
                 checkIf(direction, 'inObjectValues', FILE_TRANSFER_DIRECTION);
 
-                sessionTransferSpeeds.push(parseFloat(speed));
+                sessionAverageSpeed = averageSpeed;
 
                 // active file progress
                 bodyText1 = `${Math.floor(activeFileProgress)}% complete of "${
@@ -3225,9 +3233,10 @@ const mapDispatchToProps = (dispatch, _) =>
                       !filesPreprocessingBeforeTransfer[direction]
                         ? elapsedTimeText
                         : ''
-                    }Progress: ${progressText} @ ${averageSpeed.toFixed(
-                      2
-                    )} MB/sec`,
+                    }Progress: ${progressText} @ ${formatAvgSpeed({
+                      avgSpeed: averageSpeed,
+                      mtpMode,
+                    })}`,
                     variant: `determinate`,
                     percentage: activeFileProgress,
                   },
@@ -3309,7 +3318,7 @@ const mapDispatchToProps = (dispatch, _) =>
                   success: false,
                   sessionStats: {
                     elapsedTime: sessionElapsedTime,
-                    avgSpeed: arrayAverage(sessionTransferSpeeds),
+                    avgSpeed: getSessionAverageSpeed(),
                     totalFileSizeSent: sessionTotalFileSizeSent,
                     totalFilesSent: sessionTotalFiles,
                     mtpMode,
@@ -3320,7 +3329,7 @@ const mapDispatchToProps = (dispatch, _) =>
 
             // on completed callback for file transfer
             const onCompleted = () => {
-              const avgSpeed = arrayAverage(sessionTransferSpeeds);
+              const avgSpeed = getSessionAverageSpeed();
 
               analyticsService
                 .sendEvent(EVENT_TYPE.FILE_TRANSFER_COMPLETED, {
