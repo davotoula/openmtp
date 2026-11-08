@@ -67,9 +67,9 @@ const formatBytesInUnit = (bytes, unitIndex, decimals, fixedDecimals) => {
   const value = (bytes / 1024 ** unitIndex).toFixed(decimals); // eslint-disable-line no-restricted-properties
 
   // whole bytes never have decimals
-  return `${fixedDecimals && unitIndex > 0 ? value : parseFloat(value)} ${
-    BYTE_UNITS[unitIndex]
-  }`;
+  return `${
+    fixedDecimals && unitIndex > 0 ? value : Number.parseFloat(value)
+  } ${BYTE_UNITS[unitIndex]}`;
 };
 
 /**

@@ -3192,7 +3192,7 @@ const mapDispatchToProps = (dispatch, _) =>
 
               /// legacy mode reports the latest speed in bytes/s, kalam the running average in MB/s
               if (isLegacy) {
-                const speedInMBs = parseFloat(speed) / 1000 / 1000;
+                const speedInMBs = Number.parseFloat(speed) / 1000 / 1000;
 
                 sessionTransferSpeeds.push(speedInMBs);
                 activeFileDetails = `@ ${formatAvgSpeed({
