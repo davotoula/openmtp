@@ -92,6 +92,35 @@ jobs:
       - name: Package macOS app (ad-hoc signed, not notarized)
         run: yarn package-mac-without-notarize
 
+      # Everything above proves the app builds and packages, not that it runs.
+      # PR #9 was green and shipped a blank window: a dependency had gone
+      # ESM-only, which Electron 18's Node 16 cannot require(). Every entry in
+      # package.json dependencies is a webpack external that the packaged app
+      # loads at runtime, so load each one under the packaged app's own Node
+      # first. This catches ESM-only and ABI-broken modules in seconds.
+      - name: Load runtime dependencies under Electron
+        run: yarn check-runtime-deps
+
+      # Then start the packaged app itself, attach over the DevTools protocol,
+      # reload the renderer and fail if it throws or never mounts its React
+      # root. Plain Node 22 (fetch + WebSocket), no Playwright.
+      - name: Smoke-launch packaged app
+        id: smoke
+        run: yarn smoke-launch
+
+      # The screenshot shows what the window actually looked like and the app
+      # log carries main-process output; both are only interesting on failure.
+      - name: Upload smoke-launch screenshot and app log
+        if: failure() && steps.smoke.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-launch
+          path: |
+            dist/smoke-launch.png
+            dist/smoke-launch.log
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Verify app bundle and signature
         run: |
           test -d dist/mac-arm64/OpenMTP-resume.app

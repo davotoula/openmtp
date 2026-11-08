@@ -31,6 +31,8 @@
     "lint-styles": "stylelint --ignore-path .eslintignore '**/*.*(css|scss)' --custom-syntax postcss-scss",
     "lint-fix": "yarn --silent lint --fix; exit 0",
     "lint-styles-fix": "yarn --silent lint-styles --fix; exit 0",
+    "check-runtime-deps": "node internals/scripts/check-runtime-deps.mjs",
+    "smoke-launch": "node internals/scripts/smoke-launch.mjs",
     "postlint-fix": "prettier --ignore-path .eslintignore --single-quote --write '**/*.*{js,jsx,json}'",
     "postlint-styles-fix": "prettier --ignore-path .eslintignore --single-quote --write '**/*.{css,scss}'",
     "preinstall": "internals/scripts/preinstall.sh",
