@@ -135,9 +135,9 @@ export default merge(baseConfig, {
           },
         ],
       },
-      // SVG Font
+      // SVG
       {
-        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+        test: /\.svg$/,
         use: {
           loader: 'url-loader',
           options: {
