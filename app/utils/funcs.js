@@ -98,11 +98,7 @@ export const niceBytes = (a, b, fixedDecimals = false) => {
  * @return {{sent: string, total: string}}
  */
 export const niceBytesProgress = (sent, total) => {
-  if (!total) {
-    return { sent: niceBytes(sent, 2, true), total: niceBytes(total, 2, true) };
-  }
-
-  const unitIndex = byteUnitIndex(total);
+  const unitIndex = total > 0 ? byteUnitIndex(total) : 0;
 
   return {
     sent: formatBytesInUnit(sent, unitIndex, 2, true),

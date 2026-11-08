@@ -202,13 +202,13 @@ const formatElapsedTime = (ms) => {
 const formatProgressPercent = (percentage) =>
   `${Math.floor(percentage)}%`.padStart(4, ' ');
 
-const formatAvgSpeed = ({ avgSpeed, mtpMode }) => {
+const formatAvgSpeed = ({ avgSpeed, mtpMode, fixedDecimals = false }) => {
   if (!avgSpeed) {
     return '--';
   }
 
   return mtpMode === MTP_MODE.legacy
-    ? `${niceBytes(avgSpeed * 1000 * 1000)}/s`
+    ? `${niceBytes(avgSpeed * 1000 * 1000, 2, fixedDecimals)}/s`
     : `${avgSpeed.toFixed(2)} MB/s`;
 };
 
@@ -3175,10 +3175,10 @@ const mapDispatchToProps = (dispatch, _) =>
               totalFileProgress,
               direction,
             }) => {
-              let windowProgressBar = 0;
-              let bodyText1 = 0;
-
-              let progressInfo = [];
+              const isLegacy = mtpMode === MTP_MODE.legacy;
+              const elapsedTimeText = `Elapsed: ${elapsedTime}`;
+              let windowProgressBar = activeFileProgress / 100;
+              let activeFileDetails;
 
               sessionElapsedTime = elapsedTime;
               sessionTotalFiles = totalFiles;
@@ -3190,87 +3190,68 @@ const mapDispatchToProps = (dispatch, _) =>
                 sessionTotalFileSizeSent = activeFileSizeSent;
               }
 
-              /// file transfer progress on legacy mode
-              if (mtpMode === MTP_MODE.legacy) {
-                bodyText1 = `${formatProgressPercent(
-                  activeFileProgress
-                )} complete of "${
-                  springTruncate(currentFile, 45).truncatedText
-                }"`;
-                windowProgressBar = activeFileProgress / 100;
+              /// legacy mode reports the latest speed in bytes/s, kalam the running average in MB/s
+              if (isLegacy) {
+                const speedInMBs = parseFloat(speed) / 1000 / 1000;
 
-                sessionTransferSpeeds.push(parseFloat(speed) / 1000 / 1000);
-
-                const _speed = speed ? `${niceBytes(speed, 2, true)}/s` : `--`;
-
-                progressInfo = [
-                  {
-                    bodyText1,
-                    progressColumns: {
-                      ...niceBytesProgress(activeFileSizeSent, activeFileSize),
-                      details: `@ ${_speed} | Elapsed: ${elapsedTime}`,
-                    },
-                    variant: `determinate`,
-                    percentage: activeFileProgress,
-                  },
-                ];
+                sessionTransferSpeeds.push(speedInMBs);
+                activeFileDetails = `@ ${formatAvgSpeed({
+                  avgSpeed: speedInMBs,
+                  mtpMode,
+                  fixedDecimals: true,
+                })} | ${elapsedTimeText}`;
               } else {
                 checkIf(direction, 'string');
                 checkIf(direction, 'inObjectValues', FILE_TRANSFER_DIRECTION);
 
                 sessionAverageSpeed = averageSpeed;
+                activeFileDetails = `@ ${formatAvgSpeed({
+                  avgSpeed: averageSpeed,
+                  mtpMode,
+                })}${
+                  !filesPreprocessingBeforeTransfer[direction]
+                    ? ` | ${elapsedTimeText}`
+                    : ''
+                }`;
+              }
 
-                // active file progress
-                bodyText1 = `${formatProgressPercent(
-                  activeFileProgress
-                )} complete of "${
-                  springTruncate(currentFile, 45).truncatedText
-                }"`;
-                const elapsedTimeText = `Elapsed: ${elapsedTime}`;
-
-                progressInfo = [
-                  {
-                    bodyText1,
-                    progressColumns: {
-                      ...niceBytesProgress(activeFileSizeSent, activeFileSize),
-                      details: `@ ${formatAvgSpeed({
-                        avgSpeed: averageSpeed,
-                        mtpMode,
-                      })}${
-                        !filesPreprocessingBeforeTransfer[direction]
-                          ? ` | ${elapsedTimeText}`
-                          : ''
-                      }`,
-                    },
-                    variant: `determinate`,
-                    percentage: activeFileProgress,
+              // active file progress
+              const progressInfo = [
+                {
+                  bodyText1: `${formatProgressPercent(
+                    activeFileProgress
+                  )} complete of "${
+                    springTruncate(currentFile, 45).truncatedText
+                  }"`,
+                  progressColumns: {
+                    ...niceBytesProgress(activeFileSizeSent, activeFileSize),
+                    details: activeFileDetails,
                   },
-                ];
-                windowProgressBar = activeFileProgress / 100;
+                  variant: `determinate`,
+                  percentage: activeFileProgress,
+                },
+              ];
 
-                /// if preprocessing of file transfer is enabled then show total file transfer information as well
-                if (filesPreprocessingBeforeTransfer[direction]) {
-                  // if preprocessing of file transfer is enabled then [windowProgressBar]
-                  // progress value should be the [totalFileProgress] else [activeFileProgress] will be used
-                  windowProgressBar = totalFileProgress / 100;
+              /// if preprocessing of file transfer is enabled (kalam only) then show total file transfer information as well
+              if (!isLegacy && filesPreprocessingBeforeTransfer[direction]) {
+                // if preprocessing of file transfer is enabled then [windowProgressBar]
+                // progress value should be the [totalFileProgress] else [activeFileProgress] will be used
+                windowProgressBar = totalFileProgress / 100;
 
-                  const bodyText1 = `${filesSent} of ${totalFiles} ${getPluralText(
+                progressInfo.push({
+                  bodyText1: `${filesSent} of ${totalFiles} ${getPluralText(
                     'file',
                     totalFiles
-                  )} copied | ${Math.floor(totalFileProgress)}% completed`;
-
-                  progressInfo.push({
-                    bodyText1,
-                    progressColumns: {
-                      ...niceBytesProgress(totalFileSizeSent, totalFileSize),
-                      details: `${elapsedTimeText}${
-                        timeLeft ? ` | ${timeLeft} left` : ''
-                      }`,
-                    },
-                    variant: `determinate`,
-                    percentage: totalFileProgress,
-                  });
-                }
+                  )} copied | ${Math.floor(totalFileProgress)}% completed`,
+                  progressColumns: {
+                    ...niceBytesProgress(totalFileSizeSent, totalFileSize),
+                    details: `${elapsedTimeText}${
+                      timeLeft ? ` | ${timeLeft} left` : ''
+                    }`,
+                  },
+                  variant: `determinate`,
+                  percentage: totalFileProgress,
+                });
               }
 
               getCurrentWindow().setProgressBar(windowProgressBar);
