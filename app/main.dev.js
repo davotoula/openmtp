@@ -134,7 +134,6 @@ async function createWindow() {
       minHeight: 640,
       titleBarStyle: 'hidden',
       webPreferences: {
-        enableRemoteModule: true,
         nodeIntegration: true,
         contextIsolation: false,
       },

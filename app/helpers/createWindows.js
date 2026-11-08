@@ -60,7 +60,6 @@ const nonBootableDeviceCreateWindow = () => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
     },
     backgroundColor: getWindowBackgroundColor(),
   });
@@ -110,7 +109,6 @@ const reportBugsCreateWindow = (isRenderedPage) => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
     },
     backgroundColor: getWindowBackgroundColor(),
   };
@@ -213,7 +211,6 @@ const privacyPolicyCreateWindow = (isRenderedPage = false) => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
     },
     backgroundColor: getWindowBackgroundColor(),
   };
@@ -317,7 +314,6 @@ const appUpdateAvailableCreateWindow = () => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
     },
     backgroundColor: getWindowBackgroundColor(),
   });
@@ -381,7 +377,6 @@ const appFeaturesCreateWindow = (isRenderedPage) => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
     },
     backgroundColor: getWindowBackgroundColor(),
   };
@@ -488,7 +483,6 @@ const keyboardShortcutsCreateWindow = (isRenderedPage) => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
     },
     backgroundColor: getWindowBackgroundColor(),
   };
@@ -601,7 +595,6 @@ const helpFaqsCreateWindow = (isRenderedPage = false) => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
     },
     backgroundColor: getWindowBackgroundColor(),
   };
@@ -702,7 +695,6 @@ const helpPhoneNotConnectingCreateWindow = (isRenderedPage = false) => {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true,
     },
     backgroundColor: getWindowBackgroundColor(),
   };
