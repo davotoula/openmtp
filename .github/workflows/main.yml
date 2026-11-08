@@ -43,6 +43,43 @@ jobs:
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
+      # Packaging needs the Electron runtime zip from GitHub Releases, which
+      # intermittently answers 5xx; electron-builder makes one attempt and fails
+      # the job. It reuses a zip already in its cache dir without touching the
+      # network, so keep the zip in the Actions cache and, on a miss, fetch it
+      # here with retries and a checksum check.
+      - name: Resolve Electron version
+        id: electron
+        run: echo "version=$(node -p "require('electron/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Electron runtime
+        id: electron-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/Library/Caches/electron/electron-v${{ steps.electron.outputs.version }}-darwin-arm64.zip
+          key: electron-v${{ steps.electron.outputs.version }}-darwin-arm64
+
+      - name: Download Electron runtime (cache miss only)
+        if: steps.electron-cache.outputs.cache-hit != 'true'
+        env:
+          ELECTRON_VERSION: ${{ steps.electron.outputs.version }}
+        run: |
+          zip="electron-v${ELECTRON_VERSION}-darwin-arm64.zip"
+          base="https://github.com/electron/electron/releases/download/v${ELECTRON_VERSION}"
+          # --max-time bounds each attempt, so a stalled transfer is retried
+          # rather than hanging the job.
+          fetch() {
+            curl --fail --location --silent --show-error \
+              --connect-timeout 20 --max-time 300 \
+              --retry 8 --retry-all-errors --retry-delay 15 "$@"
+          }
+          cd "$RUNNER_TEMP"
+          fetch -o SHASUMS256.txt "$base/SHASUMS256.txt"
+          fetch -o "$zip" "$base/$zip"
+          grep " \*${zip}\$" SHASUMS256.txt | shasum -a 256 -c -
+          mkdir -p ~/Library/Caches/electron
+          mv "$zip" ~/Library/Caches/electron/
+
       - name: Build native modules for Electron
         run: yarn electron-builder install-app-deps
 
