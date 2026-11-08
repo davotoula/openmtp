@@ -16,9 +16,9 @@
 // Usage: node internals/scripts/check-runtime-deps.mjs [electron-binary]
 //        yarn check-runtime-deps
 
-import { spawn } from 'child_process';
-import fs from 'fs';
-import path from 'path';
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   PKG_ROOT,
   heading,
@@ -141,7 +141,9 @@ async function main() {
   console.log('PASS: every runtime dependency loads under Electron.');
 }
 
-main().catch((e) => {
+try {
+  await main();
+} catch (e) {
   console.error(e.stack || e);
   process.exitCode = 1;
-});
+}

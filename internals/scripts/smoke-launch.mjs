@@ -25,10 +25,10 @@
 //          [--port N] [--target-timeout S] [--mount-timeout S]
 //        yarn smoke-launch
 
-import { spawn } from 'child_process';
-import fs from 'fs';
-import net from 'net';
-import path from 'path';
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import net from 'node:net';
+import path from 'node:path';
 import {
   PKG_ROOT,
   heading,
@@ -67,7 +67,7 @@ function describeException(details) {
   const where = url ? ` at ${url}:${lineNumber}:${columnNumber}` : '';
   // exception.description usually already carries the stack; only add our
   // own frames when it does not.
-  const frames = /\n\s+at /.test(message)
+  const frames = /\n[ \t]+at /.test(message)
     ? ''
     : (stackTrace?.callFrames ?? [])
         .slice(0, 5)
@@ -77,7 +77,7 @@ function describeException(details) {
         )
         .join('\n');
 
-  return `${message}${where}${frames ? `\n${frames}` : ''}`;
+  return [message + where, frames].filter(Boolean).join('\n');
 }
 
 function describeConsole(params) {
@@ -91,7 +91,9 @@ function describeConsole(params) {
 }
 
 function describeLogEntry(entry) {
-  return `[${entry.source}] ${entry.text}${entry.url ? ` (${entry.url})` : ''}`;
+  const where = entry.url ? ` (${entry.url})` : '';
+
+  return `[${entry.source}] ${entry.text}${where}`;
 }
 
 function freePort() {
@@ -500,9 +502,12 @@ async function main() {
 
 // Exit explicitly: the CDP socket and the app's inherited stdio pipes can keep
 // the event loop alive for tens of seconds after the verdict is in.
-main()
-  .then((code) => process.exit(code))
-  .catch((e) => {
-    console.error(e.stack || e);
-    process.exit(1);
-  });
+let exitCode = 1;
+
+try {
+  exitCode = await main();
+} catch (e) {
+  console.error(e.stack || e);
+}
+
+process.exit(exitCode);

@@ -24,7 +24,9 @@ module.exports = {
     'import/no-import-module-exports': [
       'error',
       {
-        exceptions: ['**/*/webpack/**/*'],
+        // The second glob covers checkouts under a dot-directory (e.g. a git
+        // worktree in .claude/worktrees/): minimatch's ** never crosses one.
+        exceptions: ['**/*/webpack/**/*', '**/.*/**/webpack/**/*'],
       },
     ],
     'arrow-body-style': 'off',
