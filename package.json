@@ -116,7 +116,6 @@
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
     "reselect": "^4.0.0",
-    "roboto-fontface": "^0.10.0",
     "run-electron": "^1.0.0",
     "sanitize-html": "^2.13.0",
     "semver": "^7.6.0",

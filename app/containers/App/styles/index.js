@@ -112,7 +112,6 @@ export const materialUiTheme = ({ ...args }) => {
       useNextVariants: true,
       fontSize: variables().sizes.regularFontSize,
       fontFamily: [
-        'Roboto',
         '-apple-system',
         'BlinkMacSystemFont',
         '"Segoe UI"',

@@ -126,17 +126,6 @@ export default merge(baseConfig, {
           },
         ],
       },
-      // Fonts. css-loader references url() assets via `new URL()`, which
-      // webpack 5 always treats as an asset module, so a url-loader rule here
-      // would run as well and the asset would be emitted twice: the real font
-      // under fonts/ and an 80-byte JS stub at the URL the CSS points to.
-      {
-        test: /\.(woff2?|ttf|eot)(\?v=\d+\.\d+\.\d+)?$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[name].[hash][ext]',
-        },
-      },
       // SVG Font
       {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,

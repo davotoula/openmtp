@@ -135,15 +135,6 @@ export default merge(baseConfig, {
           },
         ],
       },
-      // Fonts. See the matching rule in config.renderer.prod.babel.js for why
-      // this is an asset module rather than url-loader.
-      {
-        test: /\.(woff2?|ttf|eot)(\?v=\d+\.\d+\.\d+)?$/,
-        type: 'asset/resource',
-        generator: {
-          filename: 'fonts/[name].[hash][ext]',
-        },
-      },
       // SVG Font
       {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
