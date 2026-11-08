@@ -3148,6 +3148,7 @@ const mapDispatchToProps = (dispatch, _) =>
             // on progress callback for file transfer
             const onProgress = ({
               elapsedTime,
+              timeLeft,
               speed,
               activeFileProgress,
               currentFile,
@@ -3243,7 +3244,9 @@ const mapDispatchToProps = (dispatch, _) =>
 
                   progressInfo.push({
                     bodyText1,
-                    bodyText2: `${elapsedTimeText}Progress: ${progressText}`,
+                    bodyText2: `${elapsedTimeText}Progress: ${progressText}${
+                      timeLeft ? ` | ${timeLeft} left` : ''
+                    }`,
                     variant: `determinate`,
                     percentage: totalFileProgress,
                   });

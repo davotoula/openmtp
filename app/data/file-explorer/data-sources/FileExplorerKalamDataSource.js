@@ -296,6 +296,7 @@ export class FileExplorerKalamDataSource {
    * @property {string} currentFile - current file (full path)
    * @property {int} speed - speed in MBs
    * @property {string} elapsedTime - elapsed time
+   * @property {string|null} timeLeft - estimated time left. note: this value will be null if pre-processing is false
    *
    * @property {'upload'|'download'} direction - direction of file transfer
    */
@@ -380,9 +381,16 @@ export class FileExplorerKalamDataSource {
           activeFileSize,
           bulkFileSize,
         }) => {
+          const bytesLeft = bulkFileSize.total - bulkFileSize.sent;
+
           onProgress({
             currentFile: fullPath,
             elapsedTime: msToTime(elapsedTime),
+            // extrapolated from the average speed so far
+            timeLeft:
+              bulkFileSize.sent > 0 && bytesLeft > 0
+                ? msToTime((elapsedTime * bytesLeft) / bulkFileSize.sent)
+                : null,
             speed,
             totalFiles,
             filesSent,
