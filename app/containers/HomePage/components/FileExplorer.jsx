@@ -197,6 +197,9 @@ const formatElapsedTime = (ms) => {
   return parts.join(' ');
 };
 
+// sizes in the transfer progress dialog keep a fixed number of decimals, so the text doesn't jump as they change
+const progressBytes = (bytes) => niceBytes(bytes, 2, { fixedDecimals: true });
+
 const formatAvgSpeed = ({ avgSpeed, mtpMode }) => {
   if (!avgSpeed) {
     return '--';
@@ -3150,6 +3153,7 @@ const mapDispatchToProps = (dispatch, _) =>
               elapsedTime,
               timeLeft,
               speed,
+              averageSpeed,
               activeFileProgress,
               currentFile,
               activeFileSize,
@@ -3182,14 +3186,14 @@ const mapDispatchToProps = (dispatch, _) =>
                 bodyText1 = `${Math.floor(activeFileProgress)}% complete of "${
                   springTruncate(currentFile, 45).truncatedText
                 }"`;
-                progressText = `${niceBytes(activeFileSizeSent)} / ${niceBytes(
-                  activeFileSize
-                )}`;
+                progressText = `${progressBytes(
+                  activeFileSizeSent
+                )} / ${progressBytes(activeFileSize)}`;
                 windowProgressBar = activeFileProgress / 100;
 
                 sessionTransferSpeeds.push(parseFloat(speed) / 1000 / 1000);
 
-                const _speed = speed ? `${niceBytes(speed)}` : `--`;
+                const _speed = speed ? `${progressBytes(speed)}` : `--`;
 
                 progressInfo = [
                   {
@@ -3209,9 +3213,9 @@ const mapDispatchToProps = (dispatch, _) =>
                 bodyText1 = `${Math.floor(activeFileProgress)}% complete of "${
                   springTruncate(currentFile, 45).truncatedText
                 }"`;
-                progressText = `${niceBytes(activeFileSizeSent)} / ${niceBytes(
-                  activeFileSize
-                )}`;
+                progressText = `${progressBytes(
+                  activeFileSizeSent
+                )} / ${progressBytes(activeFileSize)}`;
                 const elapsedTimeText = `Elapsed: ${elapsedTime} | `;
 
                 progressInfo = [
@@ -3221,7 +3225,9 @@ const mapDispatchToProps = (dispatch, _) =>
                       !filesPreprocessingBeforeTransfer[direction]
                         ? elapsedTimeText
                         : ''
-                    }Progress: ${progressText} @ ${speed} MB/sec`,
+                    }Progress: ${progressText} @ ${averageSpeed.toFixed(
+                      2
+                    )} MB/sec`,
                     variant: `determinate`,
                     percentage: activeFileProgress,
                   },
@@ -3238,9 +3244,9 @@ const mapDispatchToProps = (dispatch, _) =>
                     'file',
                     totalFiles
                   )} copied | ${Math.floor(totalFileProgress)}% completed`;
-                  const progressText = `${niceBytes(
+                  const progressText = `${progressBytes(
                     totalFileSizeSent
-                  )} / ${niceBytes(totalFileSize)}`;
+                  )} / ${progressBytes(totalFileSize)}`;
 
                   progressInfo.push({
                     bodyText1,

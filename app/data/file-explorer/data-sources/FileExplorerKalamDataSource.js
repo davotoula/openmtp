@@ -294,7 +294,8 @@ export class FileExplorerKalamDataSource {
    * @property {number} activeFileProgress - [size] total size of the current file sent (in percentage)
    *
    * @property {string} currentFile - current file (full path)
-   * @property {int} speed - speed in MBs
+   * @property {int} speed - speed in MBs (of the latest chunk)
+   * @property {number} averageSpeed - average speed since the start of the transfer in MBs
    * @property {string} elapsedTime - elapsed time
    * @property {string|null} timeLeft - estimated time left. note: this value will be null if pre-processing is false
    *
@@ -392,6 +393,9 @@ export class FileExplorerKalamDataSource {
                 ? msToTime((elapsedTime * bytesLeft) / bulkFileSize.sent)
                 : null,
             speed,
+            // bytes per ms / 1000 = MB/s, the same unit as [speed]
+            averageSpeed:
+              elapsedTime > 0 ? bulkFileSize.sent / elapsedTime / 1000 : 0,
             totalFiles,
             filesSent,
             filesSentProgress,

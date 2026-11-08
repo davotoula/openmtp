@@ -59,7 +59,16 @@ export const inArray = (arr, n) => {
   return arr.includes(n);
 };
 
-export const niceBytes = (a, b) => {
+/**
+ * description - Human readable size, e.g. "781.55 MB"
+ *
+ * @param a - size in bytes
+ * @param b - number of decimal places (default: 2)
+ * @param fixedDecimals - keep trailing zeros ("781.50 MB" instead of "781.5 MB"), so that a value which keeps
+ * changing (e.g. transfer progress) keeps the same length
+ * @return {string}
+ */
+export const niceBytes = (a, b, { fixedDecimals = false } = {}) => {
   if (a === 0) {
     return '0 Bytes';
   }
@@ -68,8 +77,10 @@ export const niceBytes = (a, b) => {
   const d = b || 2;
   const e = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
   const f = Math.floor(Math.log(a) / Math.log(c));
+  const value = (a / c ** f).toFixed(d); // eslint-disable-line no-restricted-properties
 
-  return `${parseFloat((a / c ** f).toFixed(d))} ${e[f]}`; // eslint-disable-line no-restricted-properties
+  // whole bytes never have decimals
+  return `${fixedDecimals && f > 0 ? value : parseFloat(value)} ${e[f]}`;
 };
 
 export const replaceBulk = (str, findArray, replaceArray) => {
