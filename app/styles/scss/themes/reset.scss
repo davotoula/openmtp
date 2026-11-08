@@ -3,7 +3,6 @@ body {
   background-color: var(--app-bg-color) !important;
   @include rem('font-size', $regularSize);
 
-  font-family: $roboto;
   overflow-x: hidden;
   overflow-y: hidden;
 }

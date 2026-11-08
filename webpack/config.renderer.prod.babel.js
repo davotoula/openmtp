@@ -79,6 +79,9 @@ export default merge(baseConfig, {
         use: [
           {
             loader: MiniCssExtractPlugin.loader,
+            options: {
+              publicPath: './',
+            },
           },
           {
             loader: 'css-loader',
@@ -123,59 +126,9 @@ export default merge(baseConfig, {
           },
         ],
       },
-      // WOFF Font
+      // SVG
       {
-        test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            publicPath: './',
-            limit: 10000,
-            mimetype: 'application/font-woff',
-            name: 'fonts/[name].[hash].[ext]',
-          },
-        },
-      },
-      // WOFF2 Font
-      {
-        test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            publicPath: './',
-            limit: 10000,
-            mimetype: 'application/font-woff',
-            name: 'fonts/[name].[hash].[ext]',
-          },
-        },
-      },
-      // TTF Font
-      {
-        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'url-loader',
-          options: {
-            publicPath: './',
-            limit: 10000,
-            mimetype: 'application/octet-stream',
-            name: 'fonts/[name].[hash].[ext]',
-          },
-        },
-      },
-      // EOT Font
-      {
-        test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
-        use: {
-          loader: 'file-loader',
-          options: {
-            publicPath: './',
-            name: 'fonts/[name].[hash].[ext]',
-          },
-        },
-      },
-      // SVG Font
-      {
-        test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+        test: /\.svg$/,
         use: {
           loader: 'url-loader',
           options: {
