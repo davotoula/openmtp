@@ -1,0 +1,94 @@
+# What proposes a dependency update in this repo.
+#
+# A Dependabot PR is a suggestion, nothing more: it runs the same CI as any
+# other PR (.github/workflows/main.yml lints, builds and packages the app) and
+# is merged by hand. There is no test suite, so a green build proves the app
+# still compiles and signs, not that it still works; anything touching
+# Electron, the MTP kernel or the file explorer wants a `yarn dev` run first.
+#
+# Two update entries, and two ecosystems deliberately absent:
+#
+#   npm             package.json + yarn.lock (yarn classic)
+#   github-actions  the `uses:` tags in .github/workflows/
+#
+#   gomod           ABSENT, on purpose. ffi/kalam/native is the Go source of
+#                   the kalam MTP kernel, but what ships is the PREBUILT
+#                   build/mac/bin/**/kalam.dylib checked into the tree. Nothing
+#                   in CI recompiles it, so a bot bumping go.mod/go.sum would
+#                   merge a manifest that no longer describes the binary. Its
+#                   two real dependencies are ganeshrvel's own go-mtpfs/go-mtpx
+#                   forks pinned to commits, which Dependabot cannot move
+#                   anyway. A kernel upgrade is a by-hand job: bump, rebuild
+#                   with ffi/kalam/native/scripts/build.mjs, commit both.
+#   docker          ABSENT, there are no Dockerfiles.
+#
+# This repo is a FORK (of ganeshrvel/openmtp). GitHub disables Dependabot
+# version updates on forks until a human enables them once, in
+# Insights -> Dependency graph -> Dependabot -> "Enable". Until then this file
+# does nothing, silently. Dependabot ALERTS and SECURITY UPDATES are repository
+# settings rather than files and are switched on with:
+#
+#   gh api -X PUT /repos/davotoula/openmtp/vulnerability-alerts
+#   gh api -X PUT /repos/davotoula/openmtp/automated-security-fixes
+#
+# Both schedules are the same morning so the week's PRs arrive together.
+
+version: 2
+
+updates:
+  # The npm graph. Minor and patch arrive as ONE weekly PR because reviewing
+  # dozens of separate bumps is how a real one gets waved through; a green
+  # build on the group is the review.
+  #
+  # Majors are ignored for version updates, across the board. Almost every
+  # dependency here is a major behind (Electron 18, React 17, MUI v4,
+  # ESLint 8, Prettier 2, webpack-dev-server 3, ...) and in this codebase none
+  # of those is a bump: each is a migration with its own branch and its own
+  # manual test pass. Left unignored they would queue for months, five at a
+  # time, and never merge. Ignore rules only ever add, so a narrower entry
+  # cannot let one package back through: to take a major, upgrade it by hand
+  # (`yarn outdated` is the list), or replace the wildcard below with named
+  # entries for the packages that must stay put. Note the ignore also applies
+  # to Dependabot SECURITY updates: a fix that needs a major bump of a direct
+  # dependency will not be proposed, but the alert still shows in the Security
+  # tab.
+  #
+  # Git dependencies (electron-devtools-installer, prettier-stylelint, both
+  # ganeshrvel forks pinned to a branch) and the npm alias react-dom ->
+  # @hot-loader/react-dom are outside what Dependabot can bump; expect them to
+  # be skipped.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/London
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "Deps"
+    groups:
+      npm-minor-and-patch:
+        applies-to: version-updates
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # The workflow action tags. They are pinned to a major (`@v7`), so the only
+  # update that can ever arrive is a major, and for the actions used here
+  # (checkout, setup-node, cache, upload-artifact) that is routinely a Node
+  # runtime bump. All of it grouped into one PR.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/London
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "CI"
+    groups:
+      actions:
+        patterns: ["*"]
