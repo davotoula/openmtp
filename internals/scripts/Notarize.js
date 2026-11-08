@@ -3,9 +3,6 @@ require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const { notarize: electronNotarize } = require('@electron/notarize');
-const electronBuilderConfig = require('../../electron-builder-config');
-
-const electronBuilderData = electronBuilderConfig();
 
 const { ELECTRON_NOTARIZE } = process.env;
 
@@ -20,7 +17,6 @@ exports.default = async (context) => {
     return;
   }
 
-  const appBundleId = electronBuilderData.appId;
   const appName = context.packager.appInfo.productFilename;
   const appPath = path.join(appOutDir, `${appName}.app`);
   const appleId = process.env.APPLEID;
@@ -42,11 +38,12 @@ exports.default = async (context) => {
     throw new Error(`Cannot find application at: ${appPath}`);
   }
 
-  console.info(`Notarizing ${appBundleId} found at ${appPath}`);
+  console.info(`Notarizing ${appPath}`);
 
+  // @electron/notarize 3 takes only appPath plus one credential set; the
+  // bundle id is read from the app itself.
   // eslint-disable-next-line no-return-await
   return await electronNotarize({
-    appBundleId,
     appPath,
     appleId,
     appleIdPassword,

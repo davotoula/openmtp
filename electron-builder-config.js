@@ -95,6 +95,12 @@ module.exports = () => {
       ...(hasSigningIdentity ? {} : { identity: null }),
       hardenedRuntime: true,
       gatekeeperAssess: false,
+      // electron-builder 25+ notarizes on its own when Apple credentials are in
+      // the environment. This project notarizes in the afterSign hook
+      // (internals/scripts/Notarize.js) with its own env handling and
+      // ELECTRON_NOTARIZE=NO escape hatch; leaving this on would notarize
+      // every signed build twice.
+      notarize: false,
       entitlements: './build/entitlements.mac.plist',
       entitlementsInherit: './build/entitlements.mac.plist',
       extendInfo: {
