@@ -33,8 +33,15 @@ jobs:
       # hooks, verify koffi's bundled N-API prebuild, or print attribution
       # notices). The one step that is needed -- compiling the native modules
       # bundled into the app against Electron's headers -- runs explicitly below.
+      #
+      # --ignore-scripts does not cover git dependencies: yarn still runs their
+      # `prepare`, which installs electron-devtools-installer's own Electron and
+      # downloads its runtime. ELECTRON_SKIP_BINARY_DOWNLOAD stops that download,
+      # which nothing here uses and which fails the job when the mirror is slow.
       - name: Install dependencies (lifecycle scripts disabled)
         run: yarn install --frozen-lockfile --ignore-scripts
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
       - name: Build native modules for Electron
         run: yarn electron-builder install-app-deps
