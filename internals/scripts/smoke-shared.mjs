@@ -2,9 +2,9 @@
 // Helpers shared by the CI smoke scripts (check-runtime-deps.mjs and
 // smoke-launch.mjs). Plain Node 22 ESM, no dependencies.
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const PKG_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
