@@ -39,7 +39,6 @@ const createChildWindow = () => {
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
-        enableRemoteModule: true,
       },
       backgroundColor: getWindowBackgroundColor(),
     });

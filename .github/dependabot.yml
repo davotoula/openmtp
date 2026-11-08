@@ -53,10 +53,9 @@ updates:
   # dependency will not be proposed, but the alert still shows in the Security
   # tab.
   #
-  # Git dependencies (electron-devtools-installer, prettier-stylelint, both
-  # ganeshrvel forks pinned to a branch) and the npm alias react-dom ->
-  # @hot-loader/react-dom are outside what Dependabot can bump; expect them to
-  # be skipped.
+  # The git dependency prettier-stylelint (a ganeshrvel fork) and the npm
+  # alias react-dom -> @hot-loader/react-dom are outside what Dependabot can
+  # bump; expect them to be skipped.
   - package-ecosystem: npm
     directory: "/"
     schedule:
