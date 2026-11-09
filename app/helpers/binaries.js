@@ -79,6 +79,8 @@ const shouldUseKalamSeg5Binaries = () =>
   getBinariesSupportedSystemArchitecture() === OS_ARCH_TYPE.arm64 &&
   macosVersion.is(KALAM_SEG5_MACOS_VERSION_RANGE);
 
+// mtp-cli (legacy MTP mode) is no longer shipped; this path resolves to a
+// missing file so the dormant legacy data source fails with ENOENT if reached.
 export const mtpCliPath = path.resolve(
   path.join(binariesPath({ includeArchDirectory: false }), './mtp-cli')
 );
