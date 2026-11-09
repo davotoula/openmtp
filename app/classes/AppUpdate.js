@@ -114,6 +114,9 @@ export default class AppUpdate {
 
     this.updateStatus = UPDATER_STATUS.inactive;
     this.disableAutoUpdateCheck = false;
+    // true while a check started from the "Check For Updates" menu entry is
+    // running; only those checks report their errors in a dialog
+    this.isMenuCheckInProgress = false;
   }
 
   init() {
@@ -123,34 +126,50 @@ export default class AppUpdate {
       }
 
       this.autoUpdater.on('error', (error) => {
+        const showDialog = this.isMenuCheckInProgress;
+
+        this.isMenuCheckInProgress = false;
+
         if (progressbarWindow !== null) {
           progressbarWindow.close();
         }
 
         this.closeActiveUpdates();
 
+        // background checks log only: a modal error box on launch would block
+        // the app for a failure the user never asked about
         if (this.isNetworkError(error)) {
-          this.spitMessageDialog(
-            'Update Error',
-            'Oops.. A network error occured. Try again!',
-            'error'
-          );
-
           log.doLog(error, `AppUpdate -> onerror -> isNetworkError`);
+
+          if (showDialog) {
+            this.spitMessageDialog(
+              'Update Error',
+              'Oops.. A network error occured. Try again!',
+              'error'
+            );
+          }
 
           return null;
         }
 
-        this.spitMessageDialog(
-          'Update Error',
-          'Oops.. Some error occured while updating the app. Try again!',
-          'error'
-        );
-
         log.error(error, `AppUpdate -> onerror`);
+
+        if (showDialog) {
+          this.spitMessageDialog(
+            'Update Error',
+            'Oops.. Some error occured while updating the app. Try again!',
+            'error'
+          );
+        }
+      });
+
+      this.autoUpdater.on('update-not-available', () => {
+        this.isMenuCheckInProgress = false;
       });
 
       this.autoUpdater.on('update-available', (info) => {
+        this.isMenuCheckInProgress = false;
+
         if (
           progressbarWindow !== null &&
           this.updateStatus !== UPDATER_STATUS.updateInProgress
@@ -328,6 +347,7 @@ export default class AppUpdate {
 
         switch (buttonIndex) {
           case 1:
+            this.isMenuCheckInProgress = true;
             this.autoUpdater.checkForUpdates();
             this.updateStatus = UPDATER_STATUS.updateInProgress;
             break;
@@ -339,6 +359,7 @@ export default class AppUpdate {
         return null;
       }
 
+      this.isMenuCheckInProgress = true;
       this.autoUpdater.checkForUpdates();
       this.updateForceCheckFlag = true;
       this.disableAutoUpdateCheck = true;
