@@ -501,7 +501,7 @@ export default class AppUpdate {
 
     if (
       _timeGenerated !== 0 &&
-      _timeGenerated - unixTimestampNow() < delayTime
+      unixTimestampNow() - _timeGenerated < delayTime
     ) {
       return null;
     }
