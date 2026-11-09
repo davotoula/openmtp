@@ -133,7 +133,9 @@ export class FileExplorerLocalDataSource {
     } else if (filePath.startsWith(PATHS.documentsDir)) {
       result = await askForFoldersAccess('documents');
     } else if (filePath.startsWith(PATHS.picturesDir)) {
-      result = await askForPhotosAccess();
+      // The default level is add-only, which the bundle declares no usage
+      // string for; the explorer reads the folder, so ask for read-write.
+      result = await askForPhotosAccess('read-write');
     }
 
     if (undefinedOrNull(result)) {
