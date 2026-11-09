@@ -11,6 +11,7 @@ import { DEBUG_PROD, ENV_FLAVOR, IS_DEV, IS_PROD } from './constants/env';
 import AppUpdate from './classes/AppUpdate';
 import { PATHS } from './constants/paths';
 import { settingsStorage } from './helpers/storageHelper';
+import { AUTO_UPDATE_CHECK_FIREUP_DELAY } from './constants';
 import { appEvents } from './utils/eventHandling';
 import { bootLoader } from './helpers/bootHelper';
 import { nonBootableDeviceWindow } from './helpers/createWindows';
@@ -254,13 +255,10 @@ if (!isDeviceBootable) {
       try {
         await createWindow();
 
-        // Auto-update is disabled in this fork. Its builds are ad-hoc signed
-        // rather than notarized (there is no Apple Developer ID), which
-        // electron-updater cannot verify, and the release feed still points at
-        // the upstream repository — so an update would hand users a different
-        // app. This also hides the "Check for Updates" menu entries, which are
-        // gated on this flag in menu.js.
-        const appUpdaterEnable = false;
+        // Builds are Developer ID signed and notarized, and the update feed
+        // points at this fork, so the updater is on. The Settings toggles
+        // decide whether it checks and downloads on its own.
+        const appUpdaterEnable = true;
 
         const autoUpdateCheckSettings = settingsStorage.getItems([
           'enableBackgroundAutoUpdate',
@@ -287,6 +285,12 @@ if (!isDeviceBootable) {
         });
 
         menuBuilder.buildMenu();
+
+        if (autoUpdateCheck && appUpdaterEnable) {
+          setTimeout(() => {
+            autoAppUpdate.checkForUpdates();
+          }, AUTO_UPDATE_CHECK_FIREUP_DELAY);
+        }
 
         // send attach and detach events to the renderer
         usbDetect.startMonitoring();

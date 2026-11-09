@@ -95,6 +95,8 @@ export default class AppUpdate {
     this.autoUpdater = autoUpdater;
     if (!isPackaged) {
       this.autoUpdater.updateConfigPath = PATHS.devAppUpdateFile;
+      // electron-updater skips every check in an unpackaged app unless forced
+      this.autoUpdater.forceDevUpdateConfig = true;
     }
 
     this.autoUpdater.autoDownload = autoUpdateCheck && autoDownload;
@@ -112,6 +114,10 @@ export default class AppUpdate {
 
     this.updateStatus = UPDATER_STATUS.inactive;
     this.disableAutoUpdateCheck = false;
+    // true while a check started from the "Check For Updates" menu entry, or a
+    // download the user confirmed, is running; only those report their errors
+    // in a dialog, background checks and auto-downloads stay silent
+    this.isMenuCheckInProgress = false;
   }
 
   init() {
@@ -121,34 +127,50 @@ export default class AppUpdate {
       }
 
       this.autoUpdater.on('error', (error) => {
+        const showDialog = this.isMenuCheckInProgress;
+
+        this.isMenuCheckInProgress = false;
+
         if (progressbarWindow !== null) {
           progressbarWindow.close();
         }
 
         this.closeActiveUpdates();
 
+        // background checks log only: a modal error box on launch would block
+        // the app for a failure the user never asked about
         if (this.isNetworkError(error)) {
-          this.spitMessageDialog(
-            'Update Error',
-            'Oops.. A network error occured. Try again!',
-            'error'
-          );
-
           log.doLog(error, `AppUpdate -> onerror -> isNetworkError`);
+
+          if (showDialog) {
+            this.spitMessageDialog(
+              'Update Error',
+              'Oops.. A network error occured. Try again!',
+              'error'
+            );
+          }
 
           return null;
         }
 
-        this.spitMessageDialog(
-          'Update Error',
-          'Oops.. Some error occured while updating the app. Try again!',
-          'error'
-        );
-
         log.error(error, `AppUpdate -> onerror`);
+
+        if (showDialog) {
+          this.spitMessageDialog(
+            'Update Error',
+            'Oops.. Some error occured while updating the app. Try again!',
+            'error'
+          );
+        }
+      });
+
+      this.autoUpdater.on('update-not-available', () => {
+        this.isMenuCheckInProgress = false;
       });
 
       this.autoUpdater.on('update-available', (info) => {
+        this.isMenuCheckInProgress = false;
+
         if (
           progressbarWindow !== null &&
           this.updateStatus !== UPDATER_STATUS.updateInProgress
@@ -198,7 +220,9 @@ export default class AppUpdate {
 
           // this is to prevent race condition
           if (!this.autoUpdater.autoDownload) {
-            this.autoUpdater.downloadUpdate();
+            this.isMenuCheckInProgress = true;
+            // failures reach the 'error' listener, which shows the dialog
+            this.autoUpdater.downloadUpdate().catch(() => {});
           }
         });
       });
@@ -212,6 +236,7 @@ export default class AppUpdate {
       });
 
       this.autoUpdater.on('update-downloaded', async () => {
+        this.isMenuCheckInProgress = false;
         this.closeActiveUpdates();
         if (progressbarWindow !== null) {
           progressbarWindow.close();
@@ -262,7 +287,7 @@ export default class AppUpdate {
             this.updateStatus = UPDATER_STATUS.inactive;
           });
 
-          this.autoUpdater.checkForUpdates();
+          this.startUpdateCheck();
 
           this.updateStatus = UPDATER_STATUS.checkInProgress;
 
@@ -326,7 +351,8 @@ export default class AppUpdate {
 
         switch (buttonIndex) {
           case 1:
-            this.autoUpdater.checkForUpdates();
+            this.isMenuCheckInProgress = true;
+            this.startUpdateCheck();
             this.updateStatus = UPDATER_STATUS.updateInProgress;
             break;
           case 0:
@@ -337,13 +363,20 @@ export default class AppUpdate {
         return null;
       }
 
-      this.autoUpdater.checkForUpdates();
+      this.isMenuCheckInProgress = true;
+      this.startUpdateCheck();
       this.updateForceCheckFlag = true;
       this.disableAutoUpdateCheck = true;
       this.updateStatus = UPDATER_STATUS.checkInProgress;
     } catch (e) {
       log.error(e, `AppUpdate -> forceCheck`);
     }
+  }
+
+  startUpdateCheck() {
+    // failures reach the 'error' listener; without this catch the rejected
+    // promise is also reported as an unhandled rejection
+    this.autoUpdater.checkForUpdates().catch(() => {});
   }
 
   setCheckUpdatesProgress() {
@@ -478,7 +511,7 @@ export default class AppUpdate {
 
     if (
       _timeGenerated !== 0 &&
-      _timeGenerated - unixTimestampNow() < delayTime
+      unixTimestampNow() - _timeGenerated < delayTime
     ) {
       return null;
     }

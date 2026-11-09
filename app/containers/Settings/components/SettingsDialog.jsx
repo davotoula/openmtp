@@ -39,11 +39,10 @@ export default class SettingsDialog extends PureComponent {
       tabIndex: 0,
     };
 
-    // Tab positions that are never shown. The Updates tab (2) is hidden because
-    // this fork disables auto-update entirely, and the Privacy tab (3) because
-    // analytics is disabled at build level (ENV_FLAVOR) -- both would only
+    // Tab positions that are never shown. The Privacy tab (3) is hidden because
+    // analytics is disabled at build level (ENV_FLAVOR), so it would only
     // persist settings that nothing acts on.
-    this.hiddenTabPositions = [...(isMas ? [1] : []), 2, 3];
+    this.hiddenTabPositions = [...(isMas ? [1] : []), 3];
   }
 
   _handleTabChange = (event, index) => {
