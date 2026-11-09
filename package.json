@@ -21,7 +21,7 @@
     "package-win": "yarn build && electron-builder --config electron-builder-config.js build --win --x64 --publish never",
     "prestart": "yarn build",
     "start": "cross-env NODE_ENV=production ./app/main.prod.js",
-    "start-main-dev": "cross-env START_HOT=1 NODE_ENV=development NODE_OPTIONS= run-electron -r @babel/register ./app/main.dev.js",
+    "start-main-dev": "cross-env START_HOT=1 NODE_ENV=development NODE_OPTIONS=--no-experimental-detect-module run-electron -r @babel/register ./app/main.dev.js",
     "start-renderer-dev": "cross-env NODE_ENV=development NODE_OPTIONS=--openssl-legacy-provider webpack serve --config webpack/config.renderer.dev.babel.js",
     "publish-mac": "yarn build && dotenv -- electron-builder --config electron-builder-config.js build --mac --publish always",
     "publish-mac-no-verify": "yarn build-no-verify && cross-env dotenv -- electron-builder --config electron-builder-config.js build --mac --publish always",
