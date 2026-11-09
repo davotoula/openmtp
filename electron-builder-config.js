@@ -19,7 +19,7 @@ module.exports = () => {
 
     switch (currentSystemArch) {
       case OS_ARCH_TYPE.arm64:
-        macResourceBinFilter = [`${OS_ARCH_TYPE.arm64}/**/*`, `mtp-cli`];
+        macResourceBinFilter = [`${OS_ARCH_TYPE.arm64}/**/*`];
         break;
 
       case OS_ARCH_TYPE.amd64:
@@ -27,7 +27,6 @@ module.exports = () => {
         macResourceBinFilter = [
           `${OS_ARCH_TYPE.amd64}/**/*`,
           `medieval/${OS_ARCH_TYPE.amd64}/**/*`,
-          `mtp-cli`,
         ];
 
         break;
@@ -124,7 +123,6 @@ module.exports = () => {
       category: 'public.app-category.productivity',
       entitlements: 'build/entitlements.mas.plist',
       icon: 'build/icon.icns',
-      binaries: ['dist/mas/OpenMTP.app/Contents/Resources/bin/mtp-cli'],
     },
     dmg: {
       contents: [

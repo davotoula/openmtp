@@ -22,12 +22,10 @@ import {
   DEVICE_TYPE,
   FILE_EXPLORER_VIEW_TYPE,
   APP_THEME_MODE_TYPE,
-  MTP_MODE,
   FILE_TRANSFER_DIRECTION,
 } from '../../../enums';
-import { capitalize, isPrereleaseVersion } from '../../../utils/funcs';
+import { isPrereleaseVersion } from '../../../utils/funcs';
 import { IpcEvents } from '../../../services/ipc-events/IpcEventType';
-import { isKalamModeSupported } from '../../../helpers/binaries';
 
 const isMas = electronIs.mas();
 
@@ -82,7 +80,6 @@ export default class SettingsDialog extends PureComponent {
       showLocalPane,
       showLocalPaneOnLeftSide,
       showDirectoriesFirst,
-      mtpMode,
       filesPreprocessingBeforeTransfer,
       onAnalyticsChange,
       onHiddenFilesChange,
@@ -96,7 +93,6 @@ export default class SettingsDialog extends PureComponent {
       onShowLocalPaneChange,
       onShowLocalPaneOnLeftSideChange,
       onShowDirectoriesFirstChange,
-      onMtpModeChange,
       onFilesPreprocessingBeforeTransferChange,
       onEnableUsbHotplug,
       enableUsbHotplug,
@@ -112,8 +108,6 @@ export default class SettingsDialog extends PureComponent {
       FILE_EXPLORER_VIEW_TYPE.grid;
     const fileExplorerListingTypeMtpGrid =
       fileExplorerListingType[DEVICE_TYPE.mtp] === FILE_EXPLORER_VIEW_TYPE.grid;
-
-    const showMtpModeSelection = isKalamModeSupported();
 
     return (
       <Dialog
@@ -186,36 +180,6 @@ export default class SettingsDialog extends PureComponent {
                         label="Auto"
                       />
                     </RadioGroup>
-
-                    {showMtpModeSelection && (
-                      <>
-                        <Typography
-                          variant="subtitle2"
-                          className={`${styles.subtitle}  ${styles.fmSettingsStylesFix}`}
-                        >
-                          MTP Mode
-                        </Typography>
-                        <RadioGroup
-                          aria-label="app-theme-mode"
-                          name="app-theme-mode"
-                          value={mtpMode}
-                          onChange={(e, value) =>
-                            onMtpModeChange(e, value, DEVICE_TYPE.mtp)
-                          }
-                        >
-                          <FormControlLabel
-                            value={MTP_MODE.kalam}
-                            control={<Radio />}
-                            label={capitalize(MTP_MODE.kalam)}
-                          />
-                          <FormControlLabel
-                            value={MTP_MODE.legacy}
-                            control={<Radio />}
-                            label={capitalize(MTP_MODE.legacy)}
-                          />
-                        </RadioGroup>
-                      </>
-                    )}
 
                     <Typography
                       variant="subtitle2"

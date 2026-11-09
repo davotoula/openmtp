@@ -28,7 +28,6 @@ import { getEnablePrereleaseUpdatesSetting } from './helpers/settings';
 import { getRemoteWindow } from './helpers/remoteWindowHelpers';
 import { IpcEvents } from './services/ipc-events/IpcEventType';
 import IpcEventService from './services/ipc-events/IpcEventHandler';
-import { isKalamModeSupported } from './helpers/binaries';
 import { fileExistsSync } from './helpers/fileOps';
 
 const remote = getRemoteWindow();
@@ -70,31 +69,18 @@ function fixSettings() {
     return;
   }
 
-  const settings = settingsStorage.getItems([
-    'mtpMode',
-    'wasForcedToToggleMtpModeForMinOsRequirement',
-  ]);
+  const settings = settingsStorage.getItems(['mtpMode']);
 
   if (!settings) {
     return;
   }
 
-  const shouldEnableKalamMode = isKalamModeSupported();
-
-  // Since we have now officially retired the support for `Kalam` Kernel on macOS 10.13 (OS X El High Sierra) and lower. Only the "Legacy" MTP mode will continue working on the outdated machines.
-  // Here we toggle the MTP mode to legacy mode for the older macOSes and will mark it as a forceful toggle.
-  // And once the user upgrades their OS and the [wasForcedToToggleMtpModeForMinOsRequirement] was true then we toggle the user back to Kalam MTP mode.
-  if (settings.wasForcedToToggleMtpModeForMinOsRequirement === true) {
-    if (shouldEnableKalamMode && settings.mtpMode === MTP_MODE.legacy) {
-      settingsStorage.setItems({
-        mtpMode: MTP_MODE.kalam,
-        wasForcedToToggleMtpModeForMinOsRequirement: false,
-      });
-    }
-  } else if (!shouldEnableKalamMode && settings.mtpMode === MTP_MODE.kalam) {
+  // Legacy MTP mode is gone along with its mtp-cli binary, so an install that
+  // persisted it is moved back to Kalam once.
+  if (settings.mtpMode === MTP_MODE.legacy) {
     settingsStorage.setItems({
-      mtpMode: MTP_MODE.legacy,
-      wasForcedToToggleMtpModeForMinOsRequirement: true,
+      mtpMode: MTP_MODE.kalam,
+      wasForcedToToggleMtpModeForMinOsRequirement: false,
     });
   }
 }
@@ -192,7 +178,11 @@ if (!isDeviceBootable) {
     }
   });
 } else {
-  fixSettings();
+  // Boot.init() copies an upstream settings file into place on first launch,
+  // so the legacy check has to wait for it or it misses that file.
+  isDeviceBootable
+    .then(fixSettings)
+    .catch((e) => log.error(e, `main.dev -> fixSettings`));
 
   if (IS_PROD) {
     process.on('uncaughtException', (error) => {

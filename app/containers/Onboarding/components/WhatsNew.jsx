@@ -5,16 +5,12 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import SystemUpdate from '@material-ui/icons/SystemUpdate';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { styles } from '../styles/WhatsNew';
 import { APP_NAME, APP_VERSION } from '../../../constants/meta';
-import { isKalamModeSupported } from '../../../helpers/binaries';
-import { MTP_MODE } from '../../../enums';
 
 class WhatsNew extends PureComponent {
   render() {
-    const isKalamModeDisabled = !isKalamModeSupported();
     const { classes: styles, hideTitle } = this.props;
 
     return (
@@ -39,18 +35,6 @@ class WhatsNew extends PureComponent {
               secondary="Fixes a crash on launch on macOS 27 Golden Gate"
             />
           </ListItem>
-
-          {isKalamModeDisabled && (
-            <ListItem>
-              <ListItemIcon>
-                <SystemUpdate htmlColor="#fa4d0a" />
-              </ListItemIcon>
-              <ListItemText
-                primary={`We have now officially retired the support for '${MTP_MODE.kalam}' Kernel on macOS 10.13 (OS X El High Sierra) and lower`}
-                secondary={`However the '${MTP_MODE.legacy}' MTP mode will continue working on these outdated machines`}
-              />
-            </ListItem>
-          )}
         </List>
       </div>
     );
