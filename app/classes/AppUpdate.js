@@ -95,6 +95,8 @@ export default class AppUpdate {
     this.autoUpdater = autoUpdater;
     if (!isPackaged) {
       this.autoUpdater.updateConfigPath = PATHS.devAppUpdateFile;
+      // electron-updater skips every check in an unpackaged app unless forced
+      this.autoUpdater.forceDevUpdateConfig = true;
     }
 
     this.autoUpdater.autoDownload = autoUpdateCheck && autoDownload;
