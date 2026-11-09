@@ -8,15 +8,14 @@ const fs = require('fs-extra');
 // /usr/bin lives on the sealed, read-only system volume.
 const CODESIGN_BIN = '/usr/bin/codesign';
 
-// When a real Developer ID is configured, electron-builder signs the app itself
-// during the step that runs after this hook, so we must not touch it here.
-const hasSigningIdentity = () =>
-  Boolean(
-    process.env.CSC_LINK ||
-      process.env.CSC_NAME ||
-      process.env.CSC_KEY_PASSWORD ||
-      process.env.APPLEID
-  );
+// electron-builder-config.js sets mac.identity to null when no signing identity
+// is configured and leaves it unset otherwise, in which case electron-builder
+// signs the app itself during the step that runs after this hook. Read that
+// decision back rather than re-deriving it from the environment: the two hook
+// modules and the config are evaluated at different times, so an environment
+// check here can disagree with the one the config made.
+const builderWillSign = (context) =>
+  context.packager.platformSpecificBuildOptions.identity !== null;
 
 // Without an identity electron-builder skips signing entirely, which leaves the
 // bundle carrying the linker's ad-hoc signature but no `_CodeSignature` seal.
@@ -58,7 +57,7 @@ exports.default = async (context) => {
       // once the locale pruning above has actually finished
       await Promise.all(_promises);
 
-      if (!hasSigningIdentity()) {
+      if (!builderWillSign(context)) {
         adhocSign(path.join(APP_OUT_DIR, `${APP_NAME}.app`));
       }
 

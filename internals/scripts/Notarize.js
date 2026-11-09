@@ -1,17 +1,9 @@
 const path = require('path');
 const fs = require('fs');
-const dotenv = require('dotenv');
 const { notarize: electronNotarize } = require('@electron/notarize');
 
 exports.default = async (context) => {
   const { electronPlatformName, appOutDir } = context;
-
-  // Called here rather than at module top level on purpose. electron-builder
-  // 26 requires every hook module before packing starts, so a top-level
-  // dotenv.config() would put APPLEID/CSC_* into process.env before AfterPack
-  // runs, and AfterPack would then see a signing identity the builder config
-  // never had and skip its ad-hoc signature.
-  dotenv.config();
 
   if (process.env.ELECTRON_NOTARIZE === 'NO') {
     return;
@@ -44,10 +36,7 @@ exports.default = async (context) => {
 
   console.info(`Notarizing ${appPath}`);
 
-  // @electron/notarize 3 takes only appPath plus one credential set; the
-  // bundle id is read from the app itself.
-  // eslint-disable-next-line no-return-await
-  return await electronNotarize({
+  return electronNotarize({
     appPath,
     appleId,
     appleIdPassword,

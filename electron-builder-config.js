@@ -42,8 +42,9 @@ module.exports = () => {
     ];
   };
 
-  // Mirrors hasSigningIdentity() in internals/scripts/AfterPack.js -- keep the
-  // two in sync, or the app ends up signed twice or not at all.
+  // Decides mac.identity below. internals/scripts/AfterPack.js reads that
+  // value back to tell whether it must ad-hoc sign, so this is the only place
+  // the signing decision is made.
   const hasSigningIdentity = Boolean(
     process.env.CSC_LINK ||
       process.env.CSC_NAME ||
@@ -95,11 +96,8 @@ module.exports = () => {
       ...(hasSigningIdentity ? {} : { identity: null }),
       hardenedRuntime: true,
       gatekeeperAssess: false,
-      // electron-builder 25+ notarizes on its own when Apple credentials are in
-      // the environment. This project notarizes in the afterSign hook
-      // (internals/scripts/Notarize.js) with its own env handling and
-      // ELECTRON_NOTARIZE=NO escape hatch; leaving this on would notarize
-      // every signed build twice.
+      // Notarization is done by the afterSign hook (internals/scripts/Notarize.js);
+      // electron-builder 25+ would otherwise notarize a second time itself.
       notarize: false,
       entitlements: './build/entitlements.mac.plist',
       entitlementsInherit: './build/entitlements.mac.plist',
