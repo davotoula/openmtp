@@ -1,7 +1,7 @@
 {
   "name": "openmtp-resume",
   "productName": "OpenMTP-resume",
-  "version": "3.3.0",
+  "version": "3.3.1",
   "description": "OpenMTP | Android File Transfer for macOS",
   "scripts": {
     "build": "yarn lint && concurrently \"yarn build-main\" \"yarn build-renderer\"",
