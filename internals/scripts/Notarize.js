@@ -1,15 +1,19 @@
-require('dotenv').config();
-
 const path = require('path');
 const fs = require('fs');
+const dotenv = require('dotenv');
 const { notarize: electronNotarize } = require('@electron/notarize');
-
-const { ELECTRON_NOTARIZE } = process.env;
 
 exports.default = async (context) => {
   const { electronPlatformName, appOutDir } = context;
 
-  if (ELECTRON_NOTARIZE === 'NO') {
+  // Called here rather than at module top level on purpose. electron-builder
+  // 26 requires every hook module before packing starts, so a top-level
+  // dotenv.config() would put APPLEID/CSC_* into process.env before AfterPack
+  // runs, and AfterPack would then see a signing identity the builder config
+  // never had and skip its ad-hoc signature.
+  dotenv.config();
+
+  if (process.env.ELECTRON_NOTARIZE === 'NO') {
     return;
   }
 
