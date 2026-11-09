@@ -283,7 +283,7 @@ export default class AppUpdate {
             this.updateStatus = UPDATER_STATUS.inactive;
           });
 
-          this.autoUpdater.checkForUpdates();
+          this.startUpdateCheck();
 
           this.updateStatus = UPDATER_STATUS.checkInProgress;
 
@@ -348,7 +348,7 @@ export default class AppUpdate {
         switch (buttonIndex) {
           case 1:
             this.isMenuCheckInProgress = true;
-            this.autoUpdater.checkForUpdates();
+            this.startUpdateCheck();
             this.updateStatus = UPDATER_STATUS.updateInProgress;
             break;
           case 0:
@@ -360,13 +360,19 @@ export default class AppUpdate {
       }
 
       this.isMenuCheckInProgress = true;
-      this.autoUpdater.checkForUpdates();
+      this.startUpdateCheck();
       this.updateForceCheckFlag = true;
       this.disableAutoUpdateCheck = true;
       this.updateStatus = UPDATER_STATUS.checkInProgress;
     } catch (e) {
       log.error(e, `AppUpdate -> forceCheck`);
     }
+  }
+
+  startUpdateCheck() {
+    // failures reach the 'error' listener; without this catch the rejected
+    // promise is also reported as an unhandled rejection
+    this.autoUpdater.checkForUpdates().catch(() => {});
   }
 
   setCheckUpdatesProgress() {
