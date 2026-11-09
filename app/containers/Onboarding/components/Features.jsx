@@ -25,8 +25,6 @@ import SmartphoneIcon from '@material-ui/icons/Smartphone';
 import CameraRollIcon from '@material-ui/icons/CameraRoll';
 import KeyboadShortcuts from '../../KeyboardShortcutsPage/components/KeyboadShortcuts';
 import { styles } from '../styles/Features';
-import { capitalize } from '../../../utils/funcs';
-import { MTP_MODE } from '../../../enums';
 
 class Features extends PureComponent {
   constructor(props) {
@@ -54,8 +52,6 @@ class Features extends PureComponent {
     const { classes: styles, hideTitle } = this.props;
     const { expansionPanel } = this.state;
 
-    const kalamLabel = capitalize(MTP_MODE.kalam);
-
     return (
       <div className={styles.root}>
         {hideTitle ? null : (
@@ -81,10 +77,7 @@ class Features extends PureComponent {
             <ListItemIcon>
               <FileCopyIcon />
             </ListItemIcon>
-            <ListItemText
-              primary="5-6x faster file copy speed"
-              secondary={`Settings > 'General' Tab > 'MTP Mode' > Select '${kalamLabel} Mode'`}
-            />
+            <ListItemText primary="5-6x faster file copy speed" />
           </ListItem>
           <ListItem>
             <ListItemIcon>

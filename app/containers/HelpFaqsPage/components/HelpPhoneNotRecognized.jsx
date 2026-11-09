@@ -24,7 +24,6 @@ import AccordionSummary from '@material-ui/core/AccordionSummary';
 import AccordionDetails from '@material-ui/core/AccordionDetails';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import PowerIcon from '@material-ui/icons/Power';
 import ReplayIcon from '@material-ui/icons/Replay';
 import SystemUpdate from '@material-ui/icons/SystemUpdate';
 import { styles } from '../styles/HelpPhoneNotRecognized';
@@ -734,16 +733,6 @@ class HelpPhoneNotRecognized extends PureComponent {
                         MacBook
                       </a>
                     }
-                  />
-                </ListItem>
-
-                <ListItem>
-                  <ListItemIcon>
-                    <PowerIcon />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary="Try changing the MTP mode"
-                    secondary={`Settings > Tab > Change the "MTP Mode"`}
                   />
                 </ListItem>
 
