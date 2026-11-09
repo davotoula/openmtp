@@ -83,6 +83,8 @@ module.exports = () => {
       'app/main.prod.js',
       'app/main.prod.js.map',
       'package.json',
+      // Ship only the arm64 koffi prebuild: the other 17 add ~25 MB and an x86_64 Mach-O.
+      '!node_modules/koffi/build/koffi/!(darwin_arm64)/**',
     ],
     extraFiles: getExtraFiles(),
     mac: {
