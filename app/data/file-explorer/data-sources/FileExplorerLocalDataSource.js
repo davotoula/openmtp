@@ -133,7 +133,11 @@ export class FileExplorerLocalDataSource {
     } else if (filePath.startsWith(PATHS.documentsDir)) {
       result = await askForFoldersAccess('documents');
     } else if (filePath.startsWith(PATHS.picturesDir)) {
-      result = await askForPhotosAccess();
+      // node-mac-permissions 2.5 defaults to add-only, which needs an
+      // NSPhotoLibraryAddUsageDescription the bundle does not carry; TCC then
+      // aborts the renderer. The explorer reads the folder, so ask for the
+      // read-write level covered by NSPhotoLibraryUsageDescription.
+      result = await askForPhotosAccess('read-write');
     }
 
     if (undefinedOrNull(result)) {
