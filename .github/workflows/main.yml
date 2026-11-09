@@ -125,6 +125,13 @@ jobs:
         run: |
           test -d dist/mac-arm64/OpenMTP-resume.app
           codesign --verify --deep --strict dist/mac-arm64/OpenMTP-resume.app
+          # macOS 27 shows "App Update Required ... will not open in macOS 28"
+          # for bundles carrying Intel-only executables (Rosetta goes away in
+          # macOS 28), so every Mach-O in the bundle must include arm64.
+          bad=$(find dist/mac-arm64/OpenMTP-resume.app -type f \( -perm -u+x -o -name '*.dylib' -o -name '*.node' \) \
+            -exec sh -c 'a=$(lipo -archs "$1" 2>/dev/null) || exit 0; case "$a" in *arm64*) ;; *) echo "$a $1";; esac' _ {} \;)
+          [ -z "$bad" ] || { echo "Non-arm64 binaries in bundle:"; echo "$bad"; exit 1; }
+          echo "Arch check: every Mach-O in the bundle includes arm64"
           cd dist && shasum -a 256 -- *.dmg *.zip | tee SHA256SUMS.txt
 
       - name: Upload DMG, zip and checksums
