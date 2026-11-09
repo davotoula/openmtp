@@ -348,15 +348,6 @@ class HelpPhoneNotRecognized extends PureComponent {
                       <SystemUpdate />
                     </ListItemIcon>
                     <ListItemText
-                      primary={`We have now officially retired support for the '${MTP_MODE.kalam}' Kernel on 'macOS 10.13' (OS X High Sierra) and lower. Only the '${MTP_MODE.legacy}' MTP mode will continue working on these outdated machines.`}
-                    />
-                  </ListItem>
-
-                  <ListItem>
-                    <ListItemIcon>
-                      <SystemUpdate />
-                    </ListItemIcon>
-                    <ListItemText
                       primary={`Only the latest 3 versions of macOS will receive the '${MTP_MODE.kalam}' Kernel updates, which include support for new devices, fixes, and stability improvements`}
                     />
                   </ListItem>

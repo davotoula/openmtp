@@ -3,7 +3,6 @@ import {
   faSync,
   faSdCard,
   faCog,
-  faPlug,
   faArrowLeft,
   faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons';
@@ -19,7 +18,6 @@ import {
   buyMeACoffeeText,
   supportUsingPayPal,
 } from '../../templates/fileExplorer';
-import { isKalamModeSupported } from '../../helpers/binaries';
 
 export const initialState = {
   focussedFileExplorerDeviceType: {
@@ -117,11 +115,6 @@ export const initialState = {
         enabled: true,
         label: 'Storage',
         icon: faSdCard,
-      },
-      mtpMode: {
-        enabled: isKalamModeSupported(),
-        label: 'MTP Mode',
-        icon: faPlug,
       },
       paypal: {
         enabled: true,
