@@ -42,8 +42,9 @@ module.exports = () => {
     ];
   };
 
-  // Mirrors hasSigningIdentity() in internals/scripts/AfterPack.js -- keep the
-  // two in sync, or the app ends up signed twice or not at all.
+  // Decides mac.identity below. internals/scripts/AfterPack.js reads that
+  // value back to tell whether it must ad-hoc sign, so this is the only place
+  // the signing decision is made.
   const hasSigningIdentity = Boolean(
     process.env.CSC_LINK ||
       process.env.CSC_NAME ||
@@ -82,6 +83,8 @@ module.exports = () => {
       'app/main.prod.js',
       'app/main.prod.js.map',
       'package.json',
+      // Ship only the arm64 koffi prebuild: the other 17 add ~25 MB and an x86_64 Mach-O.
+      '!node_modules/koffi/build/koffi/!(darwin_arm64)/**',
     ],
     extraFiles: getExtraFiles(),
     mac: {
@@ -95,6 +98,9 @@ module.exports = () => {
       ...(hasSigningIdentity ? {} : { identity: null }),
       hardenedRuntime: true,
       gatekeeperAssess: false,
+      // Notarization is done by the afterSign hook (internals/scripts/Notarize.js);
+      // electron-builder 25+ would otherwise notarize a second time itself.
+      notarize: false,
       entitlements: './build/entitlements.mac.plist',
       entitlementsInherit: './build/entitlements.mac.plist',
       extendInfo: {
