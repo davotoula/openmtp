@@ -114,9 +114,6 @@ module.exports = () => {
         NSDownloadsFolderUsageDescription: 'Downloads folder access',
         NSRemovableVolumesUsageDescription: 'Removable Disk access',
         NSPhotoLibraryUsageDescription: 'Photo library access',
-        // Never requested on purpose, but a Photos request at the add-only
-        // level without this key makes TCC abort the renderer outright.
-        NSPhotoLibraryAddUsageDescription: 'Photo library access',
       },
       target: {
         target: 'default',
