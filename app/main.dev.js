@@ -69,10 +69,7 @@ function fixSettings() {
     return;
   }
 
-  const settings = settingsStorage.getItems([
-    'mtpMode',
-    'wasForcedToToggleMtpModeForMinOsRequirement',
-  ]);
+  const settings = settingsStorage.getItems(['mtpMode']);
 
   if (!settings) {
     return;
@@ -181,7 +178,11 @@ if (!isDeviceBootable) {
     }
   });
 } else {
-  fixSettings();
+  // Boot.init() copies an upstream settings file into place on first launch,
+  // so the legacy check has to wait for it or it misses that file.
+  isDeviceBootable
+    .then(fixSettings)
+    .catch((e) => log.error(e, `main.dev -> fixSettings`));
 
   if (IS_PROD) {
     process.on('uncaughtException', (error) => {
