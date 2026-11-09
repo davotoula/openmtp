@@ -254,13 +254,10 @@ if (!isDeviceBootable) {
       try {
         await createWindow();
 
-        // Auto-update is disabled in this fork. Its builds are ad-hoc signed
-        // rather than notarized (there is no Apple Developer ID), which
-        // electron-updater cannot verify, and the release feed still points at
-        // the upstream repository — so an update would hand users a different
-        // app. This also hides the "Check for Updates" menu entries, which are
-        // gated on this flag in menu.js.
-        const appUpdaterEnable = false;
+        // Builds are Developer ID signed and notarized, and the update feed
+        // points at this fork, so the updater is on. The Settings toggles
+        // decide whether it checks and downloads on its own.
+        const appUpdaterEnable = true;
 
         const autoUpdateCheckSettings = settingsStorage.getItems([
           'enableBackgroundAutoUpdate',
