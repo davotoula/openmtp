@@ -11,6 +11,7 @@ import { DEBUG_PROD, ENV_FLAVOR, IS_DEV, IS_PROD } from './constants/env';
 import AppUpdate from './classes/AppUpdate';
 import { PATHS } from './constants/paths';
 import { settingsStorage } from './helpers/storageHelper';
+import { AUTO_UPDATE_CHECK_FIREUP_DELAY } from './constants';
 import { appEvents } from './utils/eventHandling';
 import { bootLoader } from './helpers/bootHelper';
 import { nonBootableDeviceWindow } from './helpers/createWindows';
@@ -284,6 +285,12 @@ if (!isDeviceBootable) {
         });
 
         menuBuilder.buildMenu();
+
+        if (autoUpdateCheck && appUpdaterEnable) {
+          setTimeout(() => {
+            autoAppUpdate.checkForUpdates();
+          }, AUTO_UPDATE_CHECK_FIREUP_DELAY);
+        }
 
         // send attach and detach events to the renderer
         usbDetect.startMonitoring();
