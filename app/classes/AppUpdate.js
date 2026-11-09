@@ -114,8 +114,9 @@ export default class AppUpdate {
 
     this.updateStatus = UPDATER_STATUS.inactive;
     this.disableAutoUpdateCheck = false;
-    // true while a check started from the "Check For Updates" menu entry is
-    // running; only those checks report their errors in a dialog
+    // true while a check started from the "Check For Updates" menu entry, or a
+    // download the user confirmed, is running; only those report their errors
+    // in a dialog, background checks and auto-downloads stay silent
     this.isMenuCheckInProgress = false;
   }
 
@@ -219,7 +220,9 @@ export default class AppUpdate {
 
           // this is to prevent race condition
           if (!this.autoUpdater.autoDownload) {
-            this.autoUpdater.downloadUpdate();
+            this.isMenuCheckInProgress = true;
+            // failures reach the 'error' listener, which shows the dialog
+            this.autoUpdater.downloadUpdate().catch(() => {});
           }
         });
       });
@@ -233,6 +236,7 @@ export default class AppUpdate {
       });
 
       this.autoUpdater.on('update-downloaded', async () => {
+        this.isMenuCheckInProgress = false;
         this.closeActiveUpdates();
         if (progressbarWindow !== null) {
           progressbarWindow.close();
