@@ -41,8 +41,8 @@ updates:
   # build on the group is the review.
   #
   # Majors are ignored for version updates, across the board. Almost every
-  # dependency here is a major behind (Electron 18, React 17, MUI v4,
-  # ESLint 8, Prettier 2, webpack-dev-server 3, ...) and in this codebase none
+  # dependency here is a major behind (React 17, MUI v4, ESLint 8,
+  # Prettier 2, webpack-dev-server 3, ...) and in this codebase none
   # of those is a bump: each is a migration with its own branch and its own
   # manual test pass. Left unignored they would queue for months, five at a
   # time, and never merge. Ignore rules only ever add, so a narrower entry
