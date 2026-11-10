@@ -146,11 +146,7 @@ export default class Boot {
   // straight after it, and the log file is new on the first launch of a month.
   // writeFileSync swallows errors; verify() decides whether that matters.
   createFile(filePath) {
-    try {
-      writeFileSync(filePath, ``);
-    } catch (e) {
-      console.error(e);
-    }
+    writeFileSync(filePath, ``);
   }
 
   cleanRotationFiles() {

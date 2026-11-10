@@ -35,10 +35,6 @@ const remote = getRemoteWindow();
 const isSingleInstance = app.requestSingleInstanceLock();
 let mainWindow = null;
 
-// Set once the profile has been verified. Until then the only window is the
-// profile error window, and there is no usb monitoring or device to tear down.
-let isBooted = false;
-
 if (IS_PROD) {
   const sourceMapSupport = require('source-map-support');
 
@@ -49,7 +45,16 @@ if (IS_DEV || DEBUG_PROD) {
   require('electron-debug')();
 }
 
+/**
+ * Checks whether device is ready to boot or not.
+ * Here profile files are created if not found.
+ * Resolves false rather than rejecting. The failure is logged with allowInProd
+ * so it reaches stdout in a packaged build too: the log file is usually the
+ * very thing that could not be created.
+ */
 async function bootTheDevice() {
+  let failure = `Profile files could not be created or verified: ${PATHS.logFile}`;
+
   try {
     // For an existing installation
     if (bootLoader.quickVerify()) {
@@ -59,10 +64,16 @@ async function bootTheDevice() {
     // For a fresh installation
     await bootLoader.init();
 
-    return await bootLoader.verify();
+    if (await bootLoader.verify()) {
+      return true;
+    }
   } catch (e) {
-    throw new Error(e);
+    failure = e;
   }
+
+  log.error(failure, `main.dev -> bootTheDevice`, true, true);
+
+  return false;
 }
 
 function fixSettings() {
@@ -160,31 +171,6 @@ async function createWindow() {
   }
 }
 
-/**
- * Checks whether device is ready to boot or not.
- * Here profile files are created if not found.
- * Logged with allowInProd so a failure reaches stdout in a packaged build too:
- * the log file is usually the very thing that could not be created.
- */
-async function isProfileBootable() {
-  try {
-    if (await bootTheDevice()) {
-      return true;
-    }
-
-    log.error(
-      `Profile files could not be created or verified: ${PATHS.logFile}`,
-      `main.dev -> bootTheDevice`,
-      true,
-      true
-    );
-  } catch (e) {
-    log.error(e, `main.dev -> bootTheDevice`, true, true);
-  }
-
-  return false;
-}
-
 if (IS_PROD) {
   process.on('uncaughtException', (error) => {
     log.error(error, `main.dev -> process -> uncaughtException`);
@@ -225,20 +211,6 @@ if (!isSingleInstance) {
   }
 }
 
-app.on('window-all-closed', () => {
-  try {
-    // Without a usable profile the error window is the only window, so
-    // closing it ends the app on macOS too.
-    if (process.platform === 'darwin' && isBooted) {
-      return;
-    }
-
-    app.quit();
-  } catch (e) {
-    log.error(e, `main.dev -> window-all-closed`);
-  }
-});
-
 IpcEventService.shared.start();
 
 app
@@ -249,7 +221,10 @@ app
       return;
     }
 
-    if (!(await isProfileBootable())) {
+    // Neither quit handler is registered before this point: with only the
+    // profile error window open, Electron's default quits the app when it is
+    // closed, on macOS too, and there is no usb monitoring or device to dispose.
+    if (!(await bootTheDevice())) {
       try {
         nonBootableDeviceWindow();
       } catch (e) {
@@ -260,7 +235,31 @@ app
       return;
     }
 
-    isBooted = true;
+    app.on('window-all-closed', () => {
+      try {
+        if (process.platform === 'darwin') {
+          return;
+        }
+
+        app.quit();
+      } catch (e) {
+        log.error(e, `main.dev -> window-all-closed`);
+      }
+    });
+
+    app.on('before-quit', async () => {
+      fileExplorerController
+        .dispose({
+          deviceType: DEVICE_TYPE.mtp,
+        })
+        .catch((e) => {
+          log.error(e, `main.dev -> before-quit`);
+        });
+
+      usbDetect.stopMonitoring();
+
+      app.quitting = true;
+    });
 
     // Boot.init() copies an upstream settings file into place on first launch,
     // so the legacy check has to wait for it or it misses that file.
@@ -360,22 +359,6 @@ app
   .catch((e) => {
     log.error(e, `main.dev -> whenReady`);
   });
-
-app.on('before-quit', async () => {
-  if (isBooted) {
-    fileExplorerController
-      .dispose({
-        deviceType: DEVICE_TYPE.mtp,
-      })
-      .catch((e) => {
-        log.error(e, `main.dev -> before-quit`);
-      });
-
-    usbDetect.stopMonitoring();
-  }
-
-  app.quitting = true;
-});
 
 nativeTheme.on('updated', () => {
   const setting = settingsStorage.getItems(['appThemeMode']);
