@@ -4,10 +4,11 @@
 //
 // Every entry in package.json "dependencies" is a webpack external, so the
 // packaged app require()s it at runtime from the asar under Electron's
-// bundled Node (16.x on Electron 18). A dependency that goes ESM-only, or a
+// bundled Node (24.x on Electron 45). A dependency that goes ESM-only, or a
 // native module compiled against the wrong ABI, builds and packages fine and
-// only fails when the app starts. PR #9 shipped exactly that: a blank window
-// because sanitize-html pulled in an ESM-only htmlparser2.
+// only fails when the app starts. PR #9 shipped exactly that on Electron 18
+// (Node 16): a blank window because sanitize-html pulled in an ESM-only
+// htmlparser2.
 //
 // ELECTRON_RUN_AS_NODE=1 turns the Electron binary into that Node, so loading
 // each dependency with it reproduces the runtime resolution in seconds,
