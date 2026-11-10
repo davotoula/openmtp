@@ -2,23 +2,10 @@
 
 import React, { Component, Fragment } from 'react';
 import * as path from 'path';
-import classnames from 'classnames';
-import Typography from '@material-ui/core/Typography';
-import {
-  faGithub,
-  faTwitter,
-  faFacebook,
-  faReddit,
-} from '@fortawesome/free-brands-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { withStyles } from '@material-ui/core/styles';
 import { ipcRenderer, shell } from 'electron';
 import lodashSortBy from 'lodash/sortBy';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import IconButton from '@material-ui/core/IconButton';
-import Tooltip from '@material-ui/core/Tooltip';
-import { styles } from '../styles/FileExplorer';
 import {
   TextFieldEdit as TextFieldEditDialog,
   ProgressBar as ProgressBarDialog,
@@ -87,13 +74,6 @@ import { getMainWindowRendererProcess } from '../../../helpers/windowHelper';
 import { throwAlert } from '../../Alerts/actions';
 import { imgsrc } from '../../../utils/imgsrc';
 import FileExplorerBodyRender from './FileExplorerBodyRender';
-import { openExternalUrl } from '../../../utils/url';
-import { APP_GITHUB_URL } from '../../../constants/meta';
-import {
-  fbShareUrl,
-  redditShareUrl,
-  twitterShareUrl,
-} from '../../../templates/socialMediaShareBtns';
 import { baseName, pathInfo, pathUp, sanitizePath } from '../../../utils/files';
 import {
   CONFLICT_ACTION,
@@ -118,37 +98,6 @@ const { Menu, getCurrentWindow } = remote;
 
 let allowFileDropFlag = false;
 let multipleSelectDirection = null;
-
-const socialMediaShareBtnsList = [
-  {
-    enabled: true,
-    label: 'Find us on GitHub',
-    icon: faGithub,
-    url: APP_GITHUB_URL,
-    invert: false,
-  },
-  {
-    enabled: true,
-    label: 'Share it on Twitter',
-    icon: faTwitter,
-    url: twitterShareUrl,
-    invert: false,
-  },
-  {
-    enabled: true,
-    label: 'Share it on Facebook',
-    icon: faFacebook,
-    url: fbShareUrl,
-    invert: false,
-  },
-  {
-    enabled: true,
-    label: 'Share it on Reddit',
-    icon: faReddit,
-    url: redditShareUrl,
-    invert: false,
-  },
-];
 
 const formatElapsedTime = (ms) => {
   const totalSeconds = Math.floor(ms / 1000);
@@ -2581,7 +2530,6 @@ class FileExplorer extends Component {
 
   render() {
     const {
-      classes: styles,
       deviceType,
       hideColList,
       currentBrowsePath,
@@ -2655,48 +2603,7 @@ class FileExplorer extends Component {
           helpText="If the progress bar freezes while transferring the files, restart the app and reconnect the device. This is a known Android MTP bug."
           completedStats={fileTransferProgess.completedStats || null}
           onDismiss={this._handleTransferDialogDismiss}
-        >
-          {!fileTransferProgess.completedStats && (
-            <div className={styles.socialMediaShareContainer}>
-              <Typography className={styles.socialMediaShareTitle}>
-                Liked using the App?
-              </Typography>
-              <div className={styles.socialMediaShareBtnsContainer}>
-                {socialMediaShareBtnsList.map((a, index) => (
-                  // eslint-disable-next-line react/no-array-index-key
-                  <Tooltip key={index} title={a.label}>
-                    <div>
-                      <IconButton
-                        aria-label={a.label}
-                        disabled={!a.enabled}
-                        onClick={() => openExternalUrl(a.url)}
-                        className={classnames(styles.socialMediaBtnWrapper, {
-                          [styles.socialMediaBtnWrapperForImage]: !!a.image,
-                        })}
-                      >
-                        {a.image && (
-                          <img
-                            alt={a.label}
-                            src={imgsrc(a.image, false)}
-                            className={styles.socialMediaShareBtnImages}
-                          />
-                        )}
-
-                        {a.icon && (
-                          <FontAwesomeIcon
-                            icon={a.icon}
-                            className={styles.socialMediaShareBtn}
-                            title={a.label}
-                          />
-                        )}
-                      </IconButton>
-                    </div>
-                  </Tooltip>
-                ))}
-              </div>
-            </div>
-          )}
-        </ProgressBarDialog>
+        />
         <ConflictDialog
           trigger={conflictDialog.open}
           conflictType={conflictDialog.conflictType}
@@ -3395,6 +3302,4 @@ const mapStateToProps = (state, _) => {
 export default withReducer(
   'Home',
   reducers
-)(
-  connect(mapStateToProps, mapDispatchToProps)(withStyles(styles)(FileExplorer))
-);
+)(connect(mapStateToProps, mapDispatchToProps)(FileExplorer));

@@ -8,7 +8,6 @@ import {
 import { ENV_FLAVOR } from './constants/env';
 import { APP_NAME, APP_GITHUB_URL } from './constants/meta';
 import { openExternalUrl } from './utils/url';
-import { inviteViaEmail } from './templates/menu';
 
 export default class MenuBuilder {
   constructor({ mainWindow, autoAppUpdate, appUpdaterEnable }) {
@@ -210,12 +209,6 @@ export default class MenuBuilder {
           },
         },
         {
-          label: `Invite A Friend`,
-          click: () => {
-            openExternalUrl(inviteViaEmail);
-          },
-        },
-        {
           label: 'Find Us On GitHub',
           click: () => {
             openExternalUrl(APP_GITHUB_URL);
@@ -321,12 +314,6 @@ export default class MenuBuilder {
             label: 'Privacy Policy',
             click: () => {
               privacyPolicyWindow();
-            },
-          },
-          {
-            label: `Invite A Friend`,
-            click: () => {
-              openExternalUrl(inviteViaEmail);
             },
           },
           {
