@@ -33,11 +33,7 @@ import {
   makeMtpMode,
   makeShowLocalPaneOnLeftSide,
 } from '../../Settings/selectors';
-import {
-  BUY_ME_A_COFFEE_URL,
-  DEVICES_DEFAULT_PATH,
-  SUPPORT_PAYPAL_URL,
-} from '../../../constants';
+import { DEVICES_DEFAULT_PATH } from '../../../constants';
 import { selectMtpMode, toggleSettings } from '../../Settings/actions';
 import { toggleWindowSizeOnDoubleClick } from '../../../helpers/titlebarDoubleClick';
 import ToolbarBody from './ToolbarBody';
@@ -221,14 +217,6 @@ class ToolbarAreaPane extends PureComponent {
     openExternalUrl(APP_GITHUB_URL);
   };
 
-  _handleOpenBuyMeACoffee = () => {
-    openExternalUrl(BUY_ME_A_COFFEE_URL);
-  };
-
-  _handleOpenSupportUsingPaypal = () => {
-    openExternalUrl(SUPPORT_PAYPAL_URL);
-  };
-
   _handleToolbarAction = (itemType, isAccelerator = false) => {
     checkIf(isAccelerator, 'boolean');
 
@@ -292,18 +280,6 @@ class ToolbarAreaPane extends PureComponent {
           EVENT_TYPE[`${deviceTypeUpperCase}_${actionOrigin}_GITHUB_TAP`],
           {}
         );
-        break;
-
-      case 'buyMeACoffee':
-        this._handleOpenBuyMeACoffee();
-        analyticsService.sendEvent(EVENT_TYPE.BUY_ME_A_COFFEE, {});
-
-        break;
-
-      case 'paypal':
-        this._handleOpenSupportUsingPaypal();
-        analyticsService.sendEvent(EVENT_TYPE.SUPPORT_USING_PAYPAL, {});
-
         break;
 
       case 'mtpMode':

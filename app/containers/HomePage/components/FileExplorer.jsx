@@ -65,9 +65,7 @@ import {
   makeShowDirectoriesFirst,
 } from '../../Settings/selectors';
 import {
-  BUY_ME_A_COFFEE_URL,
   DEVICES_LABEL,
-  SUPPORT_PAYPAL_URL,
   USB_HOTPLUG_MAX_ATTEMPTS,
   USB_HOTPLUG_MAX_ATTEMPTS_TIMEOUT,
 } from '../../../constants';
@@ -90,7 +88,7 @@ import { throwAlert } from '../../Alerts/actions';
 import { imgsrc } from '../../../utils/imgsrc';
 import FileExplorerBodyRender from './FileExplorerBodyRender';
 import { openExternalUrl } from '../../../utils/url';
-import { APP_GITHUB_URL, APP_NAME } from '../../../constants/meta';
+import { APP_GITHUB_URL } from '../../../constants/meta';
 import {
   fbShareUrl,
   redditShareUrl,
@@ -111,10 +109,6 @@ import fileExplorerController from '../../../data/file-explorer/controllers/File
 import { checkIf } from '../../../utils/checkIf';
 import { analyticsService } from '../../../services/analytics';
 import { EVENT_TYPE } from '../../../enums/events';
-import {
-  buyMeACoffeeText,
-  supportUsingPayPal,
-} from '../../../templates/fileExplorer';
 import { fileExistsSync } from '../../../helpers/fileOps';
 import { getRemoteWindow } from '../../../helpers/remoteWindowHelpers';
 import { IpcEvents } from '../../../services/ipc-events/IpcEventType';
@@ -124,27 +118,6 @@ const { Menu, getCurrentWindow } = remote;
 
 let allowFileDropFlag = false;
 let multipleSelectDirection = null;
-
-const supportBtnsList = [
-  {
-    enabled: true,
-    label: buyMeACoffeeText,
-    url: BUY_ME_A_COFFEE_URL,
-    image: 'FileExplorer/buymeacoffee-button.png',
-    icon: null,
-    invert: false,
-    name: 'buymeacoffee',
-  },
-  {
-    enabled: true,
-    label: supportUsingPayPal,
-    image: 'FileExplorer/paypal-logo.png',
-    icon: null,
-    url: SUPPORT_PAYPAL_URL,
-    invert: false,
-    name: 'paypal',
-  },
-];
 
 const socialMediaShareBtnsList = [
   {
@@ -2685,51 +2658,6 @@ class FileExplorer extends Component {
         >
           {!fileTransferProgess.completedStats && (
             <div className={styles.socialMediaShareContainer}>
-              <Typography className={styles.supportBtnsTitle}>
-                {`I've invested a significant amount of my time and energy into developing and maintaining this OpenSource application.`}
-                <span className={styles.supportBtnsTitleNewLine}>
-                  {`I hate to run ads.`}&nbsp;Help me keep {APP_NAME}
-                  &nbsp;
-                  <span className={styles.supportBtnsBoldText}>Free</span>
-                  &nbsp;and&nbsp;
-                  <span className={styles.supportBtnsBoldText}>Open</span>!
-                </span>
-              </Typography>
-              <div className={styles.supportBtnsContainer}>
-                {supportBtnsList.map((a, index) => (
-                  // eslint-disable-next-line react/no-array-index-key
-                  <Tooltip key={index} title={a.label}>
-                    <div>
-                      <div
-                        aria-label={a.label}
-                        onClick={() => {
-                          analyticsService.sendEvent(
-                            EVENT_TYPE.SUPPORT_CTAS_DURING_TRANSFERRING,
-                            {
-                              name: a.name,
-                            }
-                          );
-                          openExternalUrl(a.url);
-                        }}
-                        className={classnames(styles.supportBtnWrapper, {
-                          [styles.supportBtnWrapperForImage]: !!a.image,
-                        })}
-                      >
-                        {a.image && (
-                          <img
-                            alt={a.label}
-                            src={imgsrc(a.image, false)}
-                            className={classnames(styles.supportBtnImages, {
-                              [`${a.name}`]: true,
-                            })}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </Tooltip>
-                ))}
-              </div>
-
               <Typography className={styles.socialMediaShareTitle}>
                 Liked using the App?
               </Typography>

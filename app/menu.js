@@ -8,7 +8,6 @@ import {
 import { ENV_FLAVOR } from './constants/env';
 import { APP_NAME, APP_GITHUB_URL } from './constants/meta';
 import { openExternalUrl } from './utils/url';
-import { BUY_ME_A_COFFEE_URL } from './constants';
 import { inviteViaEmail } from './templates/menu';
 
 export default class MenuBuilder {
@@ -211,12 +210,6 @@ export default class MenuBuilder {
           },
         },
         {
-          label: 'Buy Me A Coffee!',
-          click: () => {
-            openExternalUrl(BUY_ME_A_COFFEE_URL);
-          },
-        },
-        {
           label: `Invite A Friend`,
           click: () => {
             openExternalUrl(inviteViaEmail);
@@ -328,12 +321,6 @@ export default class MenuBuilder {
             label: 'Privacy Policy',
             click: () => {
               privacyPolicyWindow();
-            },
-          },
-          {
-            label: 'Buy Me A Coffee!',
-            click: () => {
-              openExternalUrl(BUY_ME_A_COFFEE_URL);
             },
           },
           {

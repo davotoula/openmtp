@@ -36,12 +36,7 @@ import {
 } from '../../../constants/meta';
 import { analyticsService } from '../../../services/analytics';
 import { EVENT_TYPE } from '../../../enums/events';
-import {
-  BUY_ME_A_COFFEE_URL,
-  DELETE_KEIS_SMARTSWITCH_URL,
-  DEVICES_LABEL,
-  SUPPORT_PAYPAL_URL,
-} from '../../../constants';
+import { DELETE_KEIS_SMARTSWITCH_URL, DEVICES_LABEL } from '../../../constants';
 import { DEVICE_TYPE, MTP_MODE } from '../../../enums';
 import {
   localErrorDictionary,
@@ -304,26 +299,6 @@ class HelpPhoneNotRecognized extends PureComponent {
                   to collaborate and make this community bigger and stronger
                 </i>
                 !
-              </Typography>
-              <Typography component="p" variant="body2" paragraph>
-                If you&apos;d like to support my work or buy me a cup of coffee,
-                you can contribute via&nbsp;Paypal:&nbsp;
-                <a
-                  onClick={(events) => {
-                    openExternalUrl(SUPPORT_PAYPAL_URL, events);
-                  }}
-                >
-                  {SUPPORT_PAYPAL_URL}
-                </a>
-                &nbsp;or Buy me a coffee:&nbsp;
-                <a
-                  onClick={(events) => {
-                    openExternalUrl(BUY_ME_A_COFFEE_URL, events);
-                  }}
-                >
-                  {BUY_ME_A_COFFEE_URL}
-                </a>
-                .
               </Typography>
               <Typography component="p" variant="h6" paragraph>
                 FAQs
