@@ -55,7 +55,6 @@ export default {
         productName: JSON.stringify(pkg.productName),
         description: JSON.stringify(pkg.description),
         name: JSON.stringify(pkg.name),
-        author: JSON.stringify(pkg.author),
         version: JSON.stringify(pkg.version),
         repository: JSON.stringify(pkg.repository),
         bugs: JSON.stringify(pkg.bugs),
