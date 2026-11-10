@@ -66,17 +66,13 @@ export default class Boot {
 
   async verify() {
     try {
-      for (let i = 0; i < this.verifyDirList.length; i += 1) {
-        const item = this.verifyDirList[i];
-
+      for (const item of this.verifyDirList) {
         if (!(await this.verifyDir(item))) {
           return false;
         }
       }
 
-      for (let i = 0; i < this.verifyFileList.length; i += 1) {
-        const item = this.verifyFileList[i];
-
+      for (const item of this.verifyFileList) {
         if (!this.verifyFile(item)) {
           return false;
         }
