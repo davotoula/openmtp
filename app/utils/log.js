@@ -9,18 +9,12 @@ import { sentryService } from '../services/sentry';
 import { getDeviceInfo } from '../helpers/deviceInfo';
 import { isEmpty } from './funcs';
 import { getMtpModeSetting } from '../helpers/settings';
+import { settingsStorageForLog } from '../helpers/storageHelper';
 import { redactHomeDirectory } from '../helpers/logs';
 import { isConsoleError } from './errors';
 import { getMachineId } from '../helpers/identifiers';
 
 const { logFile } = PATHS;
-
-// An entry carries the MTP mode from settings.json, and settingsStorage logs
-// its own read failures through here. Without this guard a missing or corrupt
-// settings.json (no profile yet, or one that cannot be created) recurses until
-// the stack overflows, then spins: the process hangs and ignores SIGTERM.
-// A log call made while an entry is being composed is not written to the file.
-let isComposingEntry = false;
 
 export const log = {
   printBoundary(char = '═', length = 70, allowInProd = false) {
@@ -120,7 +114,7 @@ export const log = {
     report = true,
     isError = true
   ) {
-    if (logError === false || isComposingEntry) {
+    if (logError === false) {
       return null;
     }
 
@@ -142,19 +136,9 @@ export const log = {
     err = redactHomeDirectory(err);
 
     let _deviceInfoStrigified = '';
-    let deviceInfo;
-    let mtpMode;
-    let uuid;
-
-    isComposingEntry = true;
-
-    try {
-      deviceInfo = getDeviceInfo();
-      mtpMode = getMtpModeSetting();
-      uuid = getMachineId();
-    } finally {
-      isComposingEntry = false;
-    }
+    const deviceInfo = getDeviceInfo();
+    const mtpMode = getMtpModeSetting(settingsStorageForLog);
+    const uuid = getMachineId();
 
     if (!isEmpty(deviceInfo)) {
       Object.keys(deviceInfo).forEach((a) => {
