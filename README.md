@@ -52,15 +52,13 @@ above. Better still, install v1.5 or later.
 
 # OpenMTP | Android File Transfer for macOS
 
+_The rest of this README describes upstream OpenMTP, which this fork is based on, and may not match this fork._
+
 - Author: [Ganesh Rathinavel](https://www.linkedin.com/in/ganeshrvel 'Ganesh Rathinavel')
 - Author's Website: [ganeshrvel.com](https://www.ganeshrvel.com 'ganeshrvel.com')
 - License: [MIT](https://github.com/ganeshrvel/openmtp/blob/master/LICENSE 'MIT')
 - System Requirements: macOS 10.14 (Mojave) or higher. macOS 10.13 and earlier have limited support and require OpenMTP v3.1.15 with Legacy MTP mode.
-- Website URL: [https://openmtp.ganeshrvel.com](https://openmtp.ganeshrvel.com/ 'https://openmtp.ganeshrvel.com')
-- Guide: [How to Transfer Files Between Mac and Android or Other MTP Devices using OpenMTP](https://openmtp.ganeshrvel.com/how-to-connect-devices.html 'How to Transfer Files Between Mac and Android or Other MTP Devices using OpenMTP')
-- FAQ: [https://openmtp.ganeshrvel.com/#faq](https://openmtp.ganeshrvel.com/#faq 'https://openmtp.ganeshrvel.com/#faq')
-- Repo URL: [https://github.com/ganeshrvel/openmtp](https://github.com/ganeshrvel/openmtp/ 'https://github.com/ganeshrvel/openmtp')
-- Contacts: ganeshrvel@outlook.com
+- Repo URL: [https://github.com/davotoula/openmtp](https://github.com/davotoula/openmtp 'https://github.com/davotoula/openmtp')
 
 ## Introduction
 
@@ -98,23 +96,6 @@ The next generation of OpenMTP is in active development and coming soon. It's a 
 - Use Keyboard Shortcuts to navigate through your files.
 - No collection of personally identifiable information.
 
-### Installation
-
-> ⚠️ **Only download OpenMTP from the official sources below.** There are copycat websites that use the OpenMTP name, logo and content, redirect to various other pages. The only official sources are the official website [openmtp.ganeshrvel.com](https://openmtp.ganeshrvel.com/ 'https://openmtp.ganeshrvel.com'), this Github repository [github.com/ganeshrvel/openmtp](https://github.com/ganeshrvel/openmtp 'https://github.com/ganeshrvel/openmtp'), and [formulae.brew.sh/cask/openmtp](https://formulae.brew.sh/cask/openmtp 'Homebrew Cask').
-
-- Download the [Mac Apple Silicon](https://openmtp.ganeshrvel.com/?downloadApp=github&release=stable&platform=mac&arch=arm64 'Mac Apple Silicon') version
-- Download the [Mac Intel](https://openmtp.ganeshrvel.com/?downloadApp=github&release=stable&platform=mac&arch=x64 'Mac Intel') version
-- Using Homebrew Cask
-
-```shell
-  # newer versions:
-  brew install openmtp --cask
-  # older versions:
-  brew cask install openmtp
-```
-
-- Find the latest _dmg_ file from [GitHub Releases](https://github.com/ganeshrvel/openmtp/releases 'GitHub Releases')
-
 ### System Requirements and Support
 
 - To support macOS version below Big Sur the Kalam Kernel needs to be compiled on an older macOS machine every time there is an update, which is practically very difficult
@@ -122,23 +103,11 @@ The next generation of OpenMTP is in active development and coming soon. It's a 
 - We have now officially retired the support for `Kalam` Kernel on macOS 10.13 (OS X High Sierra) and lower. Only the "Legacy" MTP mode will continue working on these outdated machines.
 - We will continue releasing the updates for both `Intel` and `ARM64` machines
 
-#### Running OpenMTP on macOS 10.13 (High Sierra) and lower
-
-If the latest OpenMTP doesn't launch or doesn't work on your older Mac, use [OpenMTP v3.1.15](https://github.com/ganeshrvel/openmtp/releases/download/v3.1.15/OpenMTP-3.1.15.dmg 'Download OpenMTP v3.1.15') with the "Legacy" MTP mode instead. Auto-update has to be turned off, otherwise the app will replace itself with a version your Mac cannot run.
-
-1. Download [OpenMTP v3.1.15](https://github.com/ganeshrvel/openmtp/releases/download/v3.1.15/OpenMTP-3.1.15.dmg 'Download OpenMTP v3.1.15')
-2. Drag the app into the Applications folder
-3. Turn off the internet
-4. Launch v3.1.15 of the app
-5. Go to Settings
-6. In the Update tab, turn off auto-update
-7. Turn the internet back on
-
 ### Screengrabs
 
-![OpenMTP File Explorer](https://github.com/ganeshrvel/openmtp/raw/master/blobs/images/file-explorer-bluebg.jpg 'OpenMTP File Explorer')
+![OpenMTP File Explorer](blobs/images/file-explorer-bluebg.jpg 'OpenMTP File Explorer')
 
-![OpenMTP File Transfer](https://github.com/ganeshrvel/openmtp/raw/master/blobs/images/file-transfer-bluebg.jpg 'OpenMTP File Transfer')
+![OpenMTP File Transfer](blobs/images/file-transfer-bluebg.jpg 'OpenMTP File Transfer')
 
 ### Keyboard Shortcuts
 
@@ -180,7 +149,6 @@ Building from source, packaging, publishing and debugging are documented in [DEV
 #### OpenMTP doesn't launch or doesn't work on my Mac
 
 - Check your macOS version first: OpenMTP requires macOS 10.14 (Mojave) or higher
-- On macOS 10.13 (High Sierra) and lower, use [OpenMTP v3.1.15](https://github.com/ganeshrvel/openmtp/releases/download/v3.1.15/OpenMTP-3.1.15.dmg 'Download OpenMTP v3.1.15') with the "Legacy" MTP mode: [Running OpenMTP on macOS 10.13 (High Sierra) and lower](#running-openmtp-on-macos-1013-high-sierra-and-lower)
 - Still stuck? See the [troubleshooting guide](https://github.com/ganeshrvel/openmtp/issues/276 'Troubleshooting guide')
 
 ### More open-source projects from the author
@@ -211,18 +179,7 @@ Building from source, packaging, publishing and debugging are documented in [DEV
 
 ### Contribute
 
-If you are interested in fixing issues and contributing directly to the code base, please see the [guidelines](https://github.com/ganeshrvel/openmtp/blob/master/CONTRIBUTING.md 'guidelines').
-
-### Support OpenMTP
-
-Help me keep the app FREE and open for all.
-
-- Support us via PayPal: [paypal.me/ganeshrvel](https://paypal.me/ganeshrvel 'https://paypal.me/ganeshrvel')
-- Buy Me A Coffee (UPI, PayPal, Credit/Debit Cards, Internet Banking): [buymeacoffee.com/ganeshrvel](https://buymeacoffee.com/ganeshrvel 'https://buymeacoffee.com/ganeshrvel')
-
-### Contacts
-
-Please feel free to contact me at ganeshrvel@outlook.com
+If you are interested in fixing issues and contributing directly to the code base, please see the [guidelines](CONTRIBUTING.md 'guidelines').
 
 ### License
 

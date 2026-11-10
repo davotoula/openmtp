@@ -7,17 +7,14 @@ import { withStyles } from '@material-ui/core/styles';
 import { styles } from '../styles/GenerateErrorReport';
 import { PATHS } from '../../../constants/paths';
 import { fileExistsSync } from '../../../helpers/fileOps';
-import { AUTHOR_EMAIL } from '../../../constants/meta';
+import { APP_GITHUB_ISSUES_URL } from '../../../constants/meta';
 import { throwAlert } from '../../Alerts/actions';
-import {
-  mailToInstructions as _mailToInstructions,
-  reportGenerateError,
-  mailTo,
-} from '../../../templates/generateErrorReport';
+import { reportGenerateError } from '../../../templates/generateErrorReport';
 import { compressFile } from '../../../utils/gzip';
 import GenerateErrorReportBody from './GenerateErrorReportBody';
 import { baseName } from '../../../utils/files';
 import { log } from '../../../utils/log';
+import { openExternalUrl } from '../../../utils/url';
 import { getMainWindowRendererProcess } from '../../../helpers/windowHelper';
 import fileExplorerController from '../../../data/file-explorer/controllers/FileExplorerController';
 import { DEVICE_TYPE } from '../../../enums';
@@ -33,7 +30,6 @@ const zippedLogFileBaseName = `${baseName(logFile)}.gz`;
 const logFileZippedPath = path.resolve(
   path.join(desktopPath, `./${zippedLogFileBaseName}`)
 );
-const mailToInstructions = _mailToInstructions(zippedLogFileBaseName);
 
 class GenerateErrorReport extends PureComponent {
   constructor() {
@@ -125,11 +121,8 @@ class GenerateErrorReport extends PureComponent {
       return null;
     }
 
-    if (window) {
-      window.location.href = `${mailTo} ${mailToInstructions}`;
-    }
-
     shell.showItemInFolder(logFileZippedPath);
+    openExternalUrl(APP_GITHUB_ISSUES_URL);
   };
 
   render() {
@@ -139,9 +132,7 @@ class GenerateErrorReport extends PureComponent {
       <GenerateErrorReportBody
         styles={styles}
         zippedLogFileBaseName={zippedLogFileBaseName}
-        mailTo={mailTo}
-        mailToInstructions={mailToInstructions}
-        AUTHOR_EMAIL={AUTHOR_EMAIL}
+        issuesUrl={APP_GITHUB_ISSUES_URL}
         onGenerateErrorLogs={this._handleGenerateErrorLogs}
       />
     );

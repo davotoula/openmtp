@@ -6,7 +6,7 @@ import {
   faArrowLeft,
   faQuestionCircle,
 } from '@fortawesome/free-solid-svg-icons';
-import { faGithub, faPaypal } from '@fortawesome/free-brands-svg-icons';
+import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { actionTypes } from './actions';
 import { PATHS } from '../../constants/paths';
 import {
@@ -14,10 +14,6 @@ import {
   FILE_EXPLORER_DEFAULT_FOCUSSED_DEVICE_TYPE,
 } from '../../constants';
 import { DEVICE_TYPE } from '../../enums';
-import {
-  buyMeACoffeeText,
-  supportUsingPayPal,
-} from '../../templates/fileExplorer';
 
 export const initialState = {
   focussedFileExplorerDeviceType: {
@@ -115,17 +111,6 @@ export const initialState = {
         enabled: true,
         label: 'Storage',
         icon: faSdCard,
-      },
-      paypal: {
-        enabled: true,
-        label: supportUsingPayPal,
-        icon: faPaypal,
-      },
-      buyMeACoffee: {
-        enabled: true,
-        label: buyMeACoffeeText,
-        image: 'toolbar/buymeacoffee.png',
-        icon: null,
       },
       settings: {
         enabled: true,
