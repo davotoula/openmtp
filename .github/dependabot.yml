@@ -41,8 +41,8 @@ updates:
   # build on the group is the review.
   #
   # Majors are ignored for version updates, across the board. Almost every
-  # dependency here is a major behind (Electron 18, React 17, MUI v4,
-  # ESLint 8, Prettier 2, webpack-dev-server 3, ...) and in this codebase none
+  # dependency here is a major behind (React 17, MUI v4, ESLint 8,
+  # Prettier 2, webpack-dev-server 3, ...) and in this codebase none
   # of those is a bump: each is a migration with its own branch and its own
   # manual test pass. Left unignored they would queue for months, five at a
   # time, and never merge. Ignore rules only ever add, so a narrower entry
@@ -73,17 +73,6 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
-      # sanitize-html 2.17.6+ depends on an ESM-only htmlparser2 (12.x) and
-      # declares Node >= 22.12. Electron 18 ships Node 16, which cannot
-      # require() an ES module, and webpack externalises everything in
-      # `dependencies`, so the renderer loads it with Node at runtime: the
-      # first lockfile refresh (PR #9) shipped a blank window because of it.
-      # 2.17.5 is the last release on htmlparser2 10 (dual CJS/ESM). Drop this
-      # entry when the Electron migration (beads epic openmtp-6h4) lands; Node
-      # 24 can require() ES modules, and the three advisories fixed in 2.17.6,
-      # 2.17.7 and 2.18.0 close with it.
-      - dependency-name: "sanitize-html"
-        versions: [">2.17.5"]
 
   # The workflow action tags. They are pinned to a major (`@v7`), so the only
   # update that can ever arrive is a major, and for the actions used here
