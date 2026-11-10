@@ -27,7 +27,14 @@ the Internet. Are you sure you want to open it?_ prompt — click **Open**. It c
 behind other windows; until it is answered the app looks like it is hanging. After that,
 macOS asks once for access to folders such as Documents and Downloads.
 
-Requires macOS 11 or newer on Apple Silicon (arm64).
+Requires macOS 13 or newer on Apple Silicon (arm64).
+
+### Updates
+
+From **v3.3.1-resume-v2.1** onwards the app checks GitHub for a newer release shortly after
+launch, downloads it in the background and asks to install it. To stop it, turn off
+**Settings → Updates → Automatically check for updates**. Releases up to v1.5 cannot update
+themselves: download v2.1 or later once by hand.
 
 ### Older releases (v1.4 and earlier)
 
