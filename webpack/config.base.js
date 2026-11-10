@@ -58,7 +58,6 @@ export default {
         author: JSON.stringify(pkg.author),
         version: JSON.stringify(pkg.version),
         repository: JSON.stringify(pkg.repository),
-        homepage: JSON.stringify(pkg.homepage),
         bugs: JSON.stringify(pkg.bugs),
       },
     }),

@@ -5,16 +5,8 @@
 
 import { pkginfo } from '../utils/pkginfo';
 
-const {
-  productName,
-  description,
-  name,
-  author,
-  version,
-  repository,
-  homepage,
-  bugs,
-} = pkginfo;
+const { productName, description, name, author, version, repository, bugs } =
+  pkginfo;
 
 export const APP_BUNDLE_ID = 'com.davotoula.openmtp-resume';
 
@@ -44,5 +36,3 @@ export const APP_GITHUB_URL = repository?.url
 export const APP_GITHUB_RELEASES_URL = `${APP_GITHUB_URL}/releases`;
 
 export const APP_GITHUB_ISSUES_URL = bugs?.url ?? null;
-
-export const APP_WEBSITE = `${homepage}`;
