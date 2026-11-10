@@ -15,6 +15,13 @@ import { getMachineId } from '../helpers/identifiers';
 
 const { logFile } = PATHS;
 
+// An entry carries the MTP mode from settings.json, and settingsStorage logs
+// its own read failures through here. Without this guard a missing or corrupt
+// settings.json (no profile yet, or one that cannot be created) recurses until
+// the stack overflows, then spins: the process hangs and ignores SIGTERM.
+// A log call made while an entry is being composed is not written to the file.
+let isComposingEntry = false;
+
 export const log = {
   printBoundary(char = '═', length = 70, allowInProd = false) {
     if (IS_PROD && !allowInProd) {
@@ -113,7 +120,7 @@ export const log = {
     report = true,
     isError = true
   ) {
-    if (logError === false) {
+    if (logError === false || isComposingEntry) {
       return null;
     }
 
@@ -135,9 +142,19 @@ export const log = {
     err = redactHomeDirectory(err);
 
     let _deviceInfoStrigified = '';
-    const deviceInfo = getDeviceInfo();
-    const mtpMode = getMtpModeSetting();
-    const uuid = getMachineId();
+    let deviceInfo;
+    let mtpMode;
+    let uuid;
+
+    isComposingEntry = true;
+
+    try {
+      deviceInfo = getDeviceInfo();
+      mtpMode = getMtpModeSetting();
+      uuid = getMachineId();
+    } finally {
+      isComposingEntry = false;
+    }
 
     if (!isEmpty(deviceInfo)) {
       Object.keys(deviceInfo).forEach((a) => {
