@@ -20,7 +20,7 @@ export const styles = (theme) => ({
     ...mixins({ theme }).btnPositive,
   },
   issuesLink: {
+    ...mixins({ theme }).a,
     fontWeight: `bold`,
-    cursor: `pointer`,
   },
 });

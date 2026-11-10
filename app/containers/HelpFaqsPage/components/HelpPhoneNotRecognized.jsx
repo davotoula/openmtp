@@ -239,11 +239,9 @@ class HelpPhoneNotRecognized extends PureComponent {
       <div className={styles.root}>
         <Paper elevation={0}>
           {showPhoneNotRecognizedNote && (
-            <>
-              <Typography component="p" variant="h6" paragraph>
-                FAQs
-              </Typography>
-            </>
+            <Typography component="p" variant="h6" paragraph>
+              FAQs
+            </Typography>
           )}
 
           {isKalamModeDisabled && (
