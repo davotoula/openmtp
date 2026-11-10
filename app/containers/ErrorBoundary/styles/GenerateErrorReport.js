@@ -19,12 +19,8 @@ export const styles = (theme) => ({
     marginTop: 0,
     ...mixins({ theme }).btnPositive,
   },
-  emailIdWrapper: {
-    color: theme.palette.lightText1Color,
-    marginTop: 15,
-  },
-  emailId: {
-    marginLeft: 16,
+  issuesLink: {
     fontWeight: `bold`,
+    cursor: `pointer`,
   },
 });

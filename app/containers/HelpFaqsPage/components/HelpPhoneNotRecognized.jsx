@@ -28,14 +28,7 @@ import ReplayIcon from '@material-ui/icons/Replay';
 import SystemUpdate from '@material-ui/icons/SystemUpdate';
 import { styles } from '../styles/HelpPhoneNotRecognized';
 import { openExternalUrl } from '../../../utils/url';
-import {
-  APP_GITHUB_ISSUES_URL,
-  APP_NAME,
-  APP_VERSION,
-  AUTHOR_EMAIL,
-} from '../../../constants/meta';
-import { analyticsService } from '../../../services/analytics';
-import { EVENT_TYPE } from '../../../enums/events';
+import { APP_NAME } from '../../../constants/meta';
 import { DELETE_KEIS_SMARTSWITCH_URL, DEVICES_LABEL } from '../../../constants';
 import { DEVICE_TYPE, MTP_MODE } from '../../../enums';
 import {
@@ -44,22 +37,12 @@ import {
 } from '../../../helpers/processBufferOutput';
 import { MTP_ERROR } from '../../../enums/mtpError';
 import { imgsrc } from '../../../utils/imgsrc';
-import { helpPhoneNotConnecting } from '../../../templates/fileExplorer';
 import { isKalamModeSupported } from '../../../helpers/binaries';
 
 const hotplugSettingText = `Check if 'Enable auto device detection (USB Hotplug)' is enabled under Settings > General Tab`;
 const deviceLabel = DEVICES_LABEL[DEVICE_TYPE.mtp];
 
 class HelpPhoneNotRecognized extends PureComponent {
-  _handleGithubThreadTap = (events) => {
-    openExternalUrl(`${APP_GITHUB_ISSUES_URL}8`, events);
-
-    analyticsService.sendEvent(
-      EVENT_TYPE.MTP_HELP_PHONE_NOT_CONNECTED_GITHUB_THREAD_TAP,
-      {}
-    );
-  };
-
   RenderFileTransfer = () => {
     const { classes: styles } = this.props;
 
@@ -257,49 +240,6 @@ class HelpPhoneNotRecognized extends PureComponent {
         <Paper elevation={0}>
           {showPhoneNotRecognizedNote && (
             <>
-              <Typography component="p" variant="body2">
-                <strong>{APP_NAME}</strong> was a project that I started to
-                solve a problem that was so personal to me. But I always knew
-                that there&apos;s a community that&apos;s facing the same
-                problem as I did.
-              </Typography>
-              <Typography component="p" variant="body2" paragraph>
-                I wasn&apos;t wrong, I guess. Now, we are a strong community
-                with users from over&nbsp;
-                <strong>180 countries</strong>. It&apos;s overwhelming to see
-                the response that I have received from all of you, not just
-                appreciating the app, but also giving me suggestions and
-                feedback to improve it.
-              </Typography>
-              <Typography component="p" variant="body2">
-                As they say, you build for the community and learn from it.
-              </Typography>
-              <Typography component="p" variant="body2" paragraph>
-                I read each and every message that you send and am constantly
-                working to improve the app based on your feedback. Keep sending
-                more of those :)
-              </Typography>
-              <Typography component="p" variant="body2" paragraph>
-                Some of you have been telling me that there are issues with
-                connecting certain mobile phones (<i>mostly Samsung</i>) to{' '}
-                {APP_NAME}. I have been working hard to fix this issue by
-                migrating the existing MTP Kernel to a better one.
-              </Typography>
-              <Typography component="p" variant="body2" paragraph>
-                You may reach out to me at&nbsp;
-                <a
-                  href={`mailto:${AUTHOR_EMAIL}?Subject=${helpPhoneNotConnecting}&Body=${APP_NAME} - ${APP_VERSION}`}
-                >
-                  {AUTHOR_EMAIL}
-                </a>
-                &nbsp;or check out this&nbsp;
-                <a onClick={this._handleGithubThreadTap}>thread</a>
-                &nbsp;on GitHub for tracking the same,&nbsp;
-                <i>
-                  to collaborate and make this community bigger and stronger
-                </i>
-                !
-              </Typography>
               <Typography component="p" variant="h6" paragraph>
                 FAQs
               </Typography>

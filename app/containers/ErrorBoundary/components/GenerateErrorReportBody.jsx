@@ -8,21 +8,16 @@ import TouchAppIcon from '@material-ui/icons/TouchApp';
 import AttachFileIcon from '@material-ui/icons/AttachFile';
 import SendIcon from '@material-ui/icons/Send';
 import UsbIcon from '@material-ui/icons/Usb';
-import EmailIcon from '@material-ui/icons/Email';
+import BugReportIcon from '@material-ui/icons/BugReport';
 import Button from '@material-ui/core/Button';
 import { DEVICES_LABEL } from '../../../constants';
 import { DEVICE_TYPE } from '../../../enums';
+import { openExternalUrl } from '../../../utils/url';
 
 export default class GenerateErrorReportBody extends PureComponent {
   render() {
-    const {
-      styles,
-      zippedLogFileBaseName,
-      mailTo,
-      mailToInstructions,
-      AUTHOR_EMAIL,
-      onGenerateErrorLogs,
-    } = this.props;
+    const { styles, zippedLogFileBaseName, issuesUrl, onGenerateErrorLogs } =
+      this.props;
 
     return (
       <Fragment>
@@ -50,8 +45,8 @@ export default class GenerateErrorReportBody extends PureComponent {
               <TouchAppIcon />
             </ListItemIcon>
             <ListItemText
-              primary="Click the 'EMAIL ERROR LOGS' button below"
-              secondary="This will launch your default email client"
+              primary="Click the 'GENERATE ERROR LOGS' button below"
+              secondary="This saves the logs to your Desktop and opens the GitHub Issues page"
             />
           </ListItem>
           <ListItem>
@@ -59,7 +54,7 @@ export default class GenerateErrorReportBody extends PureComponent {
               <AttachFileIcon />
             </ListItemIcon>
             <ListItemText
-              primary="Attach the generated Error Log file along with the email"
+              primary="Open a new issue and attach the generated Error Log file"
               secondary={`Check Desktop Folder for ${zippedLogFileBaseName}`}
             />
           </ListItem>
@@ -67,7 +62,7 @@ export default class GenerateErrorReportBody extends PureComponent {
             <ListItemIcon>
               <SendIcon />
             </ListItemIcon>
-            <ListItemText primary="Send the email" />
+            <ListItemText primary="Describe the problem and submit the issue" />
           </ListItem>
         </List>
         <Button
@@ -76,19 +71,26 @@ export default class GenerateErrorReportBody extends PureComponent {
           className={styles.generateLogsBtn}
           onClick={onGenerateErrorLogs}
         >
-          EMAIL ERROR LOGS
+          GENERATE ERROR LOGS
         </Button>
         <List component="div">
           <ListItem>
             <ListItemIcon>
-              <EmailIcon />
+              <BugReportIcon />
             </ListItemIcon>
-            <a
-              href={`${mailTo} ${mailToInstructions}`}
-              className={styles.emailId}
-            >
-              {AUTHOR_EMAIL}
-            </a>
+            <ListItemText
+              primary={
+                <a
+                  onClick={(events) => {
+                    openExternalUrl(issuesUrl, events);
+                  }}
+                  className={styles.issuesLink}
+                >
+                  {issuesUrl}
+                </a>
+              }
+              secondary={`Attach ${zippedLogFileBaseName} to your issue; an issue and its attachments are public.`}
+            />
           </ListItem>
         </List>
       </Fragment>
