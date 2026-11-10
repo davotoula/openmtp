@@ -9,7 +9,7 @@ import { copyFileSync, readdirSync } from 'fs';
 import { PATHS } from '../constants/paths';
 import {
   fileExistsSync,
-  writeFileAsync,
+  writeFileSync,
   createDirSync,
   deleteFilesSync,
 } from '../helpers/fileOps';
@@ -66,7 +66,7 @@ export default class Boot {
 
   async verify() {
     try {
-      for (let i = 0; i < this.verifyFileList.length; i += 1) {
+      for (let i = 0; i < this.verifyDirList.length; i += 1) {
         const item = this.verifyDirList[i];
 
         if (!(await this.verifyDir(item))) {
@@ -142,9 +142,12 @@ export default class Boot {
     }
   }
 
+  // synchronous so the file exists by the time init() returns: verify() runs
+  // straight after it, and the log file is new on the first launch of a month.
+  // writeFileSync swallows errors; verify() decides whether that matters.
   createFile(filePath) {
     try {
-      writeFileAsync(filePath, ``);
+      writeFileSync(filePath, ``);
     } catch (e) {
       console.error(e);
     }
