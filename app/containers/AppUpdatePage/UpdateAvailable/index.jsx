@@ -13,6 +13,9 @@ import { setStyle } from '../../../utils/styles';
 import { getAppThemeMode } from '../../../helpers/theme';
 import { getCurrentThemePalette } from '../../App/styles';
 
+const LINK_SCHEMES = ['http', 'https', 'mailto'];
+const ABSOLUTE_LINK = new RegExp(`^(${LINK_SCHEMES.join('|')}):`, 'i');
+
 class AppUpdatePage extends Component {
   constructor(props) {
     super(props);
@@ -46,7 +49,24 @@ class AppUpdatePage extends Component {
         'div',
         'caption',
         'pre',
+        'a',
       ],
+      // Release notes are remote HTML in a window with Node access. A link
+      // keeps only its href, and only with a scheme the navigation guard
+      // (app/helpers/navigationGuard.js) hands to the default browser; a
+      // click is a plain navigation that the guard turns into exactly that.
+      allowedAttributes: {
+        a: ['href'],
+      },
+      allowedSchemes: LINK_SCHEMES,
+      transformTags: {
+        // allowedSchemes passes an href with no scheme, and a relative one
+        // ("#/settings") would route this window within the app instead
+        a: (tagName, { href = '' }) => ({
+          tagName,
+          attribs: ABSOLUTE_LINK.test(href) ? { href } : {},
+        }),
+      },
     };
   }
 

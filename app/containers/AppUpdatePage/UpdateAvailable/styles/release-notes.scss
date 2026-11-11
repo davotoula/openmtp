@@ -21,4 +21,10 @@
   pre {
     white-space: pre-wrap;
   }
+  // The notes' own text colour, so a link keeps the text's contrast on the
+  // box in both themes; the underline marks it as a link.
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
 }
