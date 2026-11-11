@@ -25,7 +25,8 @@ const parseUrl = (value) => {
     url.hash = '';
 
     return url;
-  } catch (_) {
+  } catch {
+    // An unparseable URL is expected input, not a fault: the caller denies it.
     return null;
   }
 };
