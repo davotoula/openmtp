@@ -33,7 +33,6 @@ import { fileExistsSync } from './helpers/fileOps';
 const remote = getRemoteWindow();
 
 const isSingleInstance = app.requestSingleInstanceLock();
-const isDeviceBootable = bootTheDevice();
 let mainWindow = null;
 
 if (IS_PROD) {
@@ -46,7 +45,16 @@ if (IS_DEV || DEBUG_PROD) {
   require('electron-debug')();
 }
 
+/**
+ * Checks whether device is ready to boot or not.
+ * Here profile files are created if not found.
+ * Resolves false rather than rejecting. The failure is logged with allowInProd
+ * so it reaches stdout in a packaged build too: the log file is usually the
+ * very thing that could not be created.
+ */
 async function bootTheDevice() {
+  let failure = `Profile files could not be created or verified: ${PATHS.logFile}`;
+
   try {
     // For an existing installation
     if (bootLoader.quickVerify()) {
@@ -56,10 +64,16 @@ async function bootTheDevice() {
     // For a fresh installation
     await bootLoader.init();
 
-    return await bootLoader.verify();
+    if (await bootLoader.verify()) {
+      return true;
+    }
   } catch (e) {
-    throw new Error(e);
+    failure = e;
   }
+
+  log.error(failure, `main.dev -> bootTheDevice`, true, true);
+
+  return false;
 }
 
 function fixSettings() {
@@ -157,210 +171,209 @@ async function createWindow() {
   }
 }
 
-/**
- * Checks whether device is ready to boot or not.
- * Here profile files are created if not found.
- */
-if (!isDeviceBootable) {
-  app.on('ready', async () => {
-    try {
-      nonBootableDeviceWindow();
-    } catch (e) {
-      throw new Error(e);
-    }
+if (IS_PROD) {
+  process.on('uncaughtException', (error) => {
+    log.error(error, `main.dev -> process -> uncaughtException`);
   });
 
-  app.on('window-all-closed', () => {
-    try {
-      app.quit();
-    } catch (e) {
-      throw new Error(e);
-    }
-  });
-} else {
-  // Boot.init() copies an upstream settings file into place on first launch,
-  // so the legacy check has to wait for it or it misses that file.
-  isDeviceBootable
-    .then(fixSettings)
-    .catch((e) => log.error(e, `main.dev -> fixSettings`));
-
-  if (IS_PROD) {
-    process.on('uncaughtException', (error) => {
-      log.error(error, `main.dev -> process -> uncaughtException`);
-    });
-
-    appEvents.on('error', (error) => {
-      log.error(error, `main.dev -> appEvents -> error`);
-    });
-
-    ipcMain.removeAllListeners('ELECTRON_BROWSER_WINDOW_ALERT');
-    ipcMain.on('ELECTRON_BROWSER_WINDOW_ALERT', (event, message, title) => {
-      ipcMain.error(
-        message,
-        `main.dev -> ipcMain -> on ELECTRON_BROWSER_WINDOW_ALERT -> ${title}`
-      );
-      // eslint-disable-next-line no-param-reassign
-      event.returnValue = 0;
-    });
-  }
-
-  if (!isSingleInstance) {
-    app.quit();
-  } else {
-    try {
-      app.on('second-instance', () => {
-        if (mainWindow) {
-          if (mainWindow.isMinimized()) {
-            mainWindow.restore();
-          }
-
-          mainWindow.focus();
-        }
-      });
-
-      app.on('ready', () => {});
-    } catch (e) {
-      log.error(e, `main.dev -> second-instance`);
-    }
-  }
-
-  app.on('window-all-closed', () => {
-    try {
-      if (process.platform === 'darwin') {
-        return;
-      }
-
-      app.quit();
-    } catch (e) {
-      log.error(e, `main.dev -> window-all-closed`);
-    }
+  appEvents.on('error', (error) => {
+    log.error(error, `main.dev -> appEvents -> error`);
   });
 
-  IpcEventService.shared.start();
-
-  app
-    .whenReady()
-    .then(async () => {
-      // eslint-disable-next-line promise/always-return
-      try {
-        await createWindow();
-
-        // Builds are Developer ID signed and notarized, and the update feed
-        // points at this fork, so the updater is on. The Settings toggles
-        // decide whether it checks and downloads on its own.
-        const appUpdaterEnable = true;
-
-        const autoUpdateCheckSettings = settingsStorage.getItems([
-          'enableBackgroundAutoUpdate',
-          'enableAutoUpdateCheck',
-        ]);
-
-        const autoUpdateCheck =
-          autoUpdateCheckSettings.enableAutoUpdateCheck !== false;
-        const isPrereleaseUpdatesEnabled = getEnablePrereleaseUpdatesSetting();
-
-        const autoAppUpdate = new AppUpdate({
-          autoUpdateCheck,
-          autoDownload:
-            autoUpdateCheckSettings.enableBackgroundAutoUpdate !== false,
-          allowPrerelease: isPrereleaseUpdatesEnabled === true,
-        });
-
-        autoAppUpdate.init();
-
-        const menuBuilder = new MenuBuilder({
-          mainWindow,
-          autoAppUpdate,
-          appUpdaterEnable,
-        });
-
-        menuBuilder.buildMenu();
-
-        if (autoUpdateCheck && appUpdaterEnable) {
-          setTimeout(() => {
-            autoAppUpdate.checkForUpdates();
-          }, AUTO_UPDATE_CHECK_FIREUP_DELAY);
-        }
-
-        // send attach and detach events to the renderer
-        usbDetect.startMonitoring();
-
-        usbDetect.on('add', (device) => {
-          if (!mainWindow) {
-            return;
-          }
-
-          mainWindow?.webContents?.send(IpcEvents.USB_HOTPLUG, {
-            device: JSON.stringify(device),
-            eventName: USB_HOTPLUG_EVENTS.attach,
-          });
-        });
-
-        usbDetect.on('remove', (device) => {
-          if (!mainWindow) {
-            return;
-          }
-
-          mainWindow?.webContents?.send(IpcEvents.USB_HOTPLUG, {
-            device: JSON.stringify(device),
-            eventName: USB_HOTPLUG_EVENTS.detach,
-          });
-        });
-
-        process.stdout.on('error', (err) => {
-          if (err.code === 'EPIPE') {
-            process.exit(0);
-          }
-        });
-      } catch (e) {
-        log.error(e, `main.dev -> whenReady`);
-      }
-
-      app.on('activate', async () => {
-        // On macOS it's common to re-create a window in the app when the
-        // dock icon is clicked and there are no other windows open.
-        try {
-          if (mainWindow === null) {
-            await createWindow();
-          }
-        } catch (e) {
-          log.error(e, `main.dev -> activate`);
-        }
-      });
-    })
-    .catch((e) => {
-      log.error(e, `main.dev -> whenReady`);
-    });
-
-  app.on('before-quit', async () => {
-    fileExplorerController
-      .dispose({
-        deviceType: DEVICE_TYPE.mtp,
-      })
-      .catch((e) => {
-        log.error(e, `main.dev -> before-quit`);
-      });
-
-    usbDetect.stopMonitoring();
-
-    app.quitting = true;
-  });
-
-  nativeTheme.on('updated', () => {
-    const setting = settingsStorage.getItems(['appThemeMode']);
-
-    // if the app theme is 'auto' and if the os theme has changed
-    // then refresh the app theme
-    if (setting.appThemeMode !== APP_THEME_MODE_TYPE.auto) {
-      return;
-    }
-
-    if (!mainWindow) {
-      return;
-    }
-
-    mainWindow?.webContents?.send('nativeThemeUpdated', {
-      shouldUseDarkColors: nativeTheme.shouldUseDarkColors,
-    });
+  ipcMain.removeAllListeners('ELECTRON_BROWSER_WINDOW_ALERT');
+  ipcMain.on('ELECTRON_BROWSER_WINDOW_ALERT', (event, message, title) => {
+    ipcMain.error(
+      message,
+      `main.dev -> ipcMain -> on ELECTRON_BROWSER_WINDOW_ALERT -> ${title}`
+    );
+    // eslint-disable-next-line no-param-reassign
+    event.returnValue = 0;
   });
 }
+
+if (!isSingleInstance) {
+  app.quit();
+} else {
+  try {
+    app.on('second-instance', () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) {
+          mainWindow.restore();
+        }
+
+        mainWindow.focus();
+      }
+    });
+
+    app.on('ready', () => {});
+  } catch (e) {
+    log.error(e, `main.dev -> second-instance`);
+  }
+}
+
+IpcEventService.shared.start();
+
+app
+  .whenReady()
+  .then(async () => {
+    // a second instance has already asked to quit; it shows nothing
+    if (!isSingleInstance) {
+      return;
+    }
+
+    // Neither quit handler is registered before this point: with only the
+    // profile error window open, Electron's default quits the app when it is
+    // closed, on macOS too, and there is no usb monitoring or device to dispose.
+    if (!(await bootTheDevice())) {
+      try {
+        nonBootableDeviceWindow();
+      } catch (e) {
+        log.error(e, `main.dev -> nonBootableDeviceWindow`, true, true);
+        app.quit();
+      }
+
+      return;
+    }
+
+    app.on('window-all-closed', () => {
+      try {
+        if (process.platform === 'darwin') {
+          return;
+        }
+
+        app.quit();
+      } catch (e) {
+        log.error(e, `main.dev -> window-all-closed`);
+      }
+    });
+
+    app.on('before-quit', async () => {
+      fileExplorerController
+        .dispose({
+          deviceType: DEVICE_TYPE.mtp,
+        })
+        .catch((e) => {
+          log.error(e, `main.dev -> before-quit`);
+        });
+
+      usbDetect.stopMonitoring();
+
+      app.quitting = true;
+    });
+
+    // Boot.init() copies an upstream settings file into place on first launch,
+    // so the legacy check has to wait for it or it misses that file.
+    try {
+      fixSettings();
+    } catch (e) {
+      log.error(e, `main.dev -> fixSettings`);
+    }
+
+    // eslint-disable-next-line promise/always-return
+    try {
+      await createWindow();
+
+      // Builds are Developer ID signed and notarized, and the update feed
+      // points at this fork, so the updater is on. The Settings toggles
+      // decide whether it checks and downloads on its own.
+      const appUpdaterEnable = true;
+
+      const autoUpdateCheckSettings = settingsStorage.getItems([
+        'enableBackgroundAutoUpdate',
+        'enableAutoUpdateCheck',
+      ]);
+
+      const autoUpdateCheck =
+        autoUpdateCheckSettings.enableAutoUpdateCheck !== false;
+      const isPrereleaseUpdatesEnabled = getEnablePrereleaseUpdatesSetting();
+
+      const autoAppUpdate = new AppUpdate({
+        autoUpdateCheck,
+        autoDownload:
+          autoUpdateCheckSettings.enableBackgroundAutoUpdate !== false,
+        allowPrerelease: isPrereleaseUpdatesEnabled === true,
+      });
+
+      autoAppUpdate.init();
+
+      const menuBuilder = new MenuBuilder({
+        mainWindow,
+        autoAppUpdate,
+        appUpdaterEnable,
+      });
+
+      menuBuilder.buildMenu();
+
+      if (autoUpdateCheck && appUpdaterEnable) {
+        setTimeout(() => {
+          autoAppUpdate.checkForUpdates();
+        }, AUTO_UPDATE_CHECK_FIREUP_DELAY);
+      }
+
+      // send attach and detach events to the renderer
+      usbDetect.startMonitoring();
+
+      usbDetect.on('add', (device) => {
+        if (!mainWindow) {
+          return;
+        }
+
+        mainWindow?.webContents?.send(IpcEvents.USB_HOTPLUG, {
+          device: JSON.stringify(device),
+          eventName: USB_HOTPLUG_EVENTS.attach,
+        });
+      });
+
+      usbDetect.on('remove', (device) => {
+        if (!mainWindow) {
+          return;
+        }
+
+        mainWindow?.webContents?.send(IpcEvents.USB_HOTPLUG, {
+          device: JSON.stringify(device),
+          eventName: USB_HOTPLUG_EVENTS.detach,
+        });
+      });
+
+      process.stdout.on('error', (err) => {
+        if (err.code === 'EPIPE') {
+          process.exit(0);
+        }
+      });
+    } catch (e) {
+      log.error(e, `main.dev -> whenReady`);
+    }
+
+    app.on('activate', async () => {
+      // On macOS it's common to re-create a window in the app when the
+      // dock icon is clicked and there are no other windows open.
+      try {
+        if (mainWindow === null) {
+          await createWindow();
+        }
+      } catch (e) {
+        log.error(e, `main.dev -> activate`);
+      }
+    });
+  })
+  .catch((e) => {
+    log.error(e, `main.dev -> whenReady`);
+  });
+
+nativeTheme.on('updated', () => {
+  const setting = settingsStorage.getItems(['appThemeMode']);
+
+  // if the app theme is 'auto' and if the os theme has changed
+  // then refresh the app theme
+  if (setting.appThemeMode !== APP_THEME_MODE_TYPE.auto) {
+    return;
+  }
+
+  if (!mainWindow) {
+    return;
+  }
+
+  mainWindow?.webContents?.send('nativeThemeUpdated', {
+    shouldUseDarkColors: nativeTheme.shouldUseDarkColors,
+  });
+});

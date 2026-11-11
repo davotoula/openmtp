@@ -17,8 +17,8 @@ export const getAppThemeModeSetting = () => {
   return getAppThemeMode(value);
 };
 
-export const getMtpModeSetting = () => {
-  const setting = settingsStorage.getItems(['mtpMode']);
+export const getMtpModeSetting = (storage = settingsStorage) => {
+  const setting = storage.getItems(['mtpMode']);
 
   let value = setting.mtpMode;
 

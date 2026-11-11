@@ -9,6 +9,7 @@ import { sentryService } from '../services/sentry';
 import { getDeviceInfo } from '../helpers/deviceInfo';
 import { isEmpty } from './funcs';
 import { getMtpModeSetting } from '../helpers/settings';
+import { settingsStorageForLog } from '../helpers/storageHelper';
 import { redactHomeDirectory } from '../helpers/logs';
 import { isConsoleError } from './errors';
 import { getMachineId } from '../helpers/identifiers';
@@ -136,7 +137,7 @@ export const log = {
 
     let _deviceInfoStrigified = '';
     const deviceInfo = getDeviceInfo();
-    const mtpMode = getMtpModeSetting();
+    const mtpMode = getMtpModeSetting(settingsStorageForLog);
     const uuid = getMachineId();
 
     if (!isEmpty(deviceInfo)) {
