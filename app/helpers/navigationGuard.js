@@ -15,7 +15,7 @@ export const NAVIGATION_DECISION = {
 
 // Schemes handed to shell.openExternal. On macOS openExternal launches whatever
 // app handles a scheme, so anything not listed here is dropped.
-const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'mailto:'];
+const EXTERNAL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:']);
 
 // Parsed with the hash removed: a #route is the same page.
 const parseUrl = (value) => {
@@ -52,7 +52,7 @@ export const decideNavigation = (targetUrl, appPageUrl) => {
     return NAVIGATION_DECISION.allow;
   }
 
-  if (EXTERNAL_PROTOCOLS.includes(target.protocol)) {
+  if (EXTERNAL_PROTOCOLS.has(target.protocol)) {
     return NAVIGATION_DECISION.external;
   }
 
