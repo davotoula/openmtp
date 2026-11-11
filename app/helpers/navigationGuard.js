@@ -26,7 +26,8 @@ const parseUrl = (value) => {
 
     return url;
   } catch {
-    // An unparseable URL is expected input, not a fault: the caller denies it.
+    // Expected, not a fault: an unparseable target is denied, and a null app
+    // page (window.open passes none) matches nothing.
     return null;
   }
 };
