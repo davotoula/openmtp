@@ -1,4 +1,8 @@
 .releaseNotes {
+  // The window is a fixed 650 x 552, so a long line (a checksum, a URL)
+  // breaks inside the box instead of scrolling it sideways.
+  overflow-wrap: anywhere;
+
   h1,
   h2,
   h3,
@@ -13,5 +17,14 @@
   }
   li {
     line-height: 22px;
+  }
+  pre {
+    white-space: pre-wrap;
+  }
+  // The notes' own text colour, so a link keeps the text's contrast on the
+  // box in both themes. Chromium underlines only an a with an href, so a link
+  // the sanitiser emptied reads as plain text.
+  a {
+    color: inherit;
   }
 }
