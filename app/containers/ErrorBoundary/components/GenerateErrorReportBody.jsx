@@ -81,6 +81,7 @@ export default class GenerateErrorReportBody extends PureComponent {
             <ListItemText
               primary={
                 <a
+                  href={issuesUrl}
                   onClick={(events) => {
                     openExternalUrl(issuesUrl, events);
                   }}
