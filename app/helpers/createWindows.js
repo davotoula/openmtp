@@ -11,7 +11,7 @@ import {
 } from '../templates/helpFaqsPage';
 import { APP_FEATURES_PAGE_TITLE } from '../templates/appFeaturesPage';
 import { KEYBOARD_SHORTCUTS_PAGE_TITLE } from '../templates/keyboardShortcutsPage';
-import { getWindowBackgroundColor } from './windowHelper';
+import { getWindowBackgroundColor, getWindowColors } from './windowHelper';
 import { REPORT_BUGS_PAGE_TITLE } from '../templates/generateErrorReport';
 import { getRemoteWindow } from './remoteWindowHelpers';
 
@@ -70,7 +70,9 @@ export const nonBootableDeviceWindow = () => {
   remote.enable(_nonBootableDeviceWindow.webContents);
 
   _nonBootableDeviceWindow.loadURL(
-    `data:text/html;charset=utf-8, ${encodeURI(loadProfileErrorHtml)}`
+    `data:text/html;charset=utf-8, ${encodeURIComponent(
+      loadProfileErrorHtml(getWindowColors())
+    )}`
   );
 
   _nonBootableDeviceWindow.webContents.on('did-finish-load', () => {

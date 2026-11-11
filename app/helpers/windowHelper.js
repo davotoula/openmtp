@@ -28,12 +28,18 @@ export const getMainWindowRendererProcess = () => {
   return remote.BrowserWindow.getAllWindows()[_mainWindow.length - 1];
 };
 
-export const getWindowBackgroundColor = () => {
-  const appThemeMode = getAppThemeMode();
-  const { background } = getCurrentThemePalette(appThemeMode);
+// Colours for a page shown straight in a window, without the app's theme.
+export const getWindowColors = () => {
+  const { background, primary } = getCurrentThemePalette(getAppThemeMode());
 
-  return background.paper;
+  return {
+    background: background.paper,
+    // paper is the primary colour in both palettes, so this is its contrast
+    text: primary.contrastText,
+  };
 };
+
+export const getWindowBackgroundColor = () => getWindowColors().background;
 
 export const getCurrentWindowHash = () => {
   if (!IS_RENDERER) {
