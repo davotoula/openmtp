@@ -49,7 +49,7 @@ export const decideNavigation = (targetUrl, appPageUrl) => {
   const appPage = parseUrl(appPageUrl);
 
   // A reload, or a route change that is not hash-only.
-  if (appPage && target.href === appPage.href) {
+  if (target.href === appPage?.href) {
     return NAVIGATION_DECISION.allow;
   }
 
