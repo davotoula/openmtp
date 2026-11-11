@@ -34,7 +34,9 @@ Requires macOS 13 or newer on Apple Silicon (arm64).
 From **v3.3.1-resume-v2.1** onwards the app checks GitHub for a newer release shortly after
 launch, downloads it in the background and asks to install it. To stop it, turn off
 **Settings → Updates → Automatically check for updates**. Releases up to v1.5 cannot update
-themselves: download v2.1 or later once by hand.
+themselves: download v2.1 or later once by hand. On a standard (non-admin) macOS account,
+installing an update asks for an administrator's name and password, because only
+administrators can replace apps in `/Applications`; admin accounts are not asked.
 
 ### Older releases (v1.4 and earlier)
 
