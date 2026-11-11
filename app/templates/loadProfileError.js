@@ -7,8 +7,7 @@ import { APP_GITHUB_ISSUES_URL } from '../constants/meta';
  * @param {object} colors - from the current theme palette, so the page matches
  *   the window's backgroundColor in light and dark mode
  * @param {string} colors.background
- * @param {string} colors.text - used for the link too: underlined, it reads as
- *   a link and keeps the text's contrast against the background
+ * @param {string} colors.text - the link too, so it keeps the text's contrast
  */
 export const loadProfileErrorHtml = ({ background, text }) => `
         <html lang="en-gb">
@@ -20,8 +19,7 @@ export const loadProfileErrorHtml = ({ background, text }) => `
                 font-family: -apple-system, BlinkMacSystemFont, sans-serif;
               }
               a {
-                color: ${text};
-                text-decoration: underline;
+                color: inherit;
               }
             </style>
           </head>

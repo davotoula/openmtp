@@ -17,25 +17,21 @@ export const NAVIGATION_DECISION = {
 // app handles a scheme, so anything not listed here is dropped.
 const EXTERNAL_PROTOCOLS = ['http:', 'https:', 'mailto:'];
 
+// Parsed with the hash removed: a #route is the same page.
 const parseUrl = (value) => {
   try {
-    return new URL(value);
+    const url = new URL(value);
+
+    url.hash = '';
+
+    return url;
   } catch (_) {
     return null;
   }
 };
 
-const withoutHash = (url) => {
-  const copy = new URL(url.href);
-
-  copy.hash = '';
-
-  return copy.href;
-};
-
 /**
  * Decide what to do with a navigation away from an app window.
- * Pure: no Electron calls, so it can be read and exercised on its own.
  *
  * @param {string} targetUrl - where the window wants to go
  * @param {string|null} appPageUrl - the app's own page (PATHS.loadUrlPath);
@@ -49,11 +45,10 @@ export const decideNavigation = (targetUrl, appPageUrl) => {
     return NAVIGATION_DECISION.deny;
   }
 
-  const appPage = appPageUrl ? parseUrl(appPageUrl) : null;
+  const appPage = parseUrl(appPageUrl);
 
-  // The app's page with any #route: a reload, or a route change that is not
-  // hash-only.
-  if (appPage && withoutHash(target) === withoutHash(appPage)) {
+  // A reload, or a route change that is not hash-only.
+  if (appPage && target.href === appPage.href) {
     return NAVIGATION_DECISION.allow;
   }
 
@@ -70,12 +65,10 @@ const handOff = (url, decision, source) => {
   if (decision === NAVIGATION_DECISION.external) {
     log.info(`Opening in the default browser: ${url}`, title, true, true);
     shell.openExternal(url).catch((e) => log.error(e, title, true, true));
-
-    return;
+  } else {
+    // not reported: a denied URL can be a local file path
+    log.error(`Blocked navigation to: ${url}`, title, true, true, false);
   }
-
-  // not reported: a denied URL can be a local file path
-  log.error(`Blocked navigation to: ${url}`, title, true, true, false);
 };
 
 const guardWebContents = (contents) => {
@@ -108,7 +101,5 @@ const guardWebContents = (contents) => {
  * Register once, in the main process, before any window is created.
  */
 export const registerNavigationGuard = () => {
-  app.on('web-contents-created', (_, contents) => {
-    guardWebContents(contents);
-  });
+  app.on('web-contents-created', (_, contents) => guardWebContents(contents));
 };

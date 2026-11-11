@@ -11,11 +11,9 @@ import {
 } from '../templates/helpFaqsPage';
 import { APP_FEATURES_PAGE_TITLE } from '../templates/appFeaturesPage';
 import { KEYBOARD_SHORTCUTS_PAGE_TITLE } from '../templates/keyboardShortcutsPage';
-import { getWindowBackgroundColor } from './windowHelper';
+import { getWindowBackgroundColor, getWindowColors } from './windowHelper';
 import { REPORT_BUGS_PAGE_TITLE } from '../templates/generateErrorReport';
 import { getRemoteWindow } from './remoteWindowHelpers';
-import { getAppThemeMode } from './theme';
-import { getCurrentThemePalette } from '../containers/App/styles';
 
 const remote = getRemoteWindow();
 
@@ -71,15 +69,10 @@ export const nonBootableDeviceWindow = () => {
   _nonBootableDeviceWindow = nonBootableDeviceCreateWindow();
   remote.enable(_nonBootableDeviceWindow.webContents);
 
-  const palette = getCurrentThemePalette(getAppThemeMode());
-  const html = loadProfileErrorHtml({
-    background: palette.background.paper,
-    // the paper colour is primary.main in both themes
-    text: palette.primary.contrastText,
-  });
-
   _nonBootableDeviceWindow.loadURL(
-    `data:text/html;charset=utf-8, ${encodeURIComponent(html)}`
+    `data:text/html;charset=utf-8, ${encodeURIComponent(
+      loadProfileErrorHtml(getWindowColors())
+    )}`
   );
 
   _nonBootableDeviceWindow.webContents.on('did-finish-load', () => {
