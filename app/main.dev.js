@@ -29,6 +29,7 @@ import { getRemoteWindow } from './helpers/remoteWindowHelpers';
 import { IpcEvents } from './services/ipc-events/IpcEventType';
 import IpcEventService from './services/ipc-events/IpcEventHandler';
 import { fileExistsSync } from './helpers/fileOps';
+import { registerNavigationGuard } from './helpers/navigationGuard';
 
 const remote = getRemoteWindow();
 
@@ -212,6 +213,7 @@ if (!isSingleInstance) {
 }
 
 IpcEventService.shared.start();
+registerNavigationGuard();
 
 app
   .whenReady()
